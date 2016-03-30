@@ -60,7 +60,7 @@ func (list {{.GoName}}List) FormatJSON() string {
 {{- /**/ -}}
 package client
 
-import "github.com/opentable/sous-singularity/client/dtos"
+import "github.com/opentable/singularity/dtos"
 
 {{range .Operations}}
 {{- if not .GoTypeInvalid -}}
