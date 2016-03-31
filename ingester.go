@@ -18,8 +18,6 @@ type ServiceApiJSON struct {
 }
 
 func ProcessService(dir string, ingester *Context) {
-	defer log.SetFlags(log.Flags())
-	log.SetFlags(log.Lshortfile)
 	fullpath := filepath.Join(dir, "service.json")
 
 	apis := &ServiceJSON{}

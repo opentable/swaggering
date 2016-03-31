@@ -23,6 +23,7 @@ type (
 
 	Api struct {
 		Path, Description string
+		BasePackageName   string
 		Operations        []*Operation
 	}
 

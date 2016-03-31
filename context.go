@@ -1,14 +1,15 @@
 package swaggering
 
 type Context struct {
-	swaggers   []*Swagger
-	apis       []*Api
-	models     []*Model
-	openModels []*Model
+	packageName string
+	swaggers    []*Swagger
+	apis        []*Api
+	models      []*Model
+	openModels  []*Model
 }
 
-func NewContext() (context *Context) {
-	context = &Context{}
+func NewContext(packageName string) (context *Context) {
+	context = &Context{packageName: packageName}
 	context.swaggers = make([]*Swagger, 0)
 
 	return
