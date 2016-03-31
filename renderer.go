@@ -38,29 +38,29 @@ func (self *{{.GoName}}) FormatJSON() string {
 
 type {{.GoName}}List []*{{.GoName}}
 
-func (list {{.GoName}}List) Populate(jsonReader io.ReadCloser) (err error) {
+func (list *{{.GoName}}List) Populate(jsonReader io.ReadCloser) (err error) {
 	return ReadPopulate(jsonReader, list)
 }
 
-func (list {{.GoName}}List) FormatText() string {
+func (list *{{.GoName}}List) FormatText() string {
 	text := []byte{}
-	for _, dto := range list {
+	for _, dto := range *list {
 		text = append(text, (*dto).FormatText()...)
 		text = append(text, "\n"...)
 	}
 	return string(text)
 }
 
-func (list {{.GoName}}List) FormatJSON() string {
+func (list *{{.GoName}}List) FormatJSON() string {
 	return FormatJSON(list)
 }
 {{/**/ -}}
 `
 	defaultApiTmpl = `
 {{- /**/ -}}
-package client
+package singularity
 
-import "github.com/opentable/singularity/dtos"
+import "{{.BasePackageName}}/dtos"
 
 {{range .Operations}}
 {{- if not .GoTypeInvalid -}}
@@ -88,7 +88,7 @@ func (client *Client) {{.GoMethodName}}(
 	{{if .GoModel -}}
 	{{if eq .GoTypePrefix ""}}
 		response = make({{.GoTypePrefix}}dtos.{{.GoBaseType}}, 0)
-		err = client.DTORequest(response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
+		err = client.DTORequest(&response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body
 		{{- end -}})
@@ -135,8 +135,6 @@ func NewRenderer(tgt string) (renderer *Renderer) {
 }
 
 func RenderService(target string, ingester *Context) {
-	defer log.SetFlags(log.Flags())
-	log.SetFlags(log.Flags() | log.Lshortfile)
 	self := NewRenderer(target)
 	for _, model := range ingester.models {
 		if model.GoUses {
