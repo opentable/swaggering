@@ -18,11 +18,15 @@ type ServiceApiJSON struct {
 }
 
 func ProcessService(dir string, ingester *Context) {
+	ingester.ProcessServiceDir(dir)
+}
+
+func (ingester *Context) ProcessServiceDir(dir string) {
 	fullpath := filepath.Join(dir, "service.json")
 
 	apis := &ServiceJSON{}
 
-	loadJSON(fullpath, apis)
+	loadJSONfromPath(fullpath, apis)
 
 	fileRE := regexp.MustCompile(`^/(\w+).{format}$`)
 
@@ -31,17 +35,21 @@ func ProcessService(dir string, ingester *Context) {
 		file := []byte("")
 		file = fileRE.ExpandString(file, "$1.json", api.Path, smi)
 
-		ingester.ingestApi(filepath.Join(dir, string(file)))
+		ingester.ingestApifromPath(filepath.Join(dir, string(file)))
 	}
 }
 
-func loadJSON(fullpath string, into interface{}) {
+func loadJSONfromPath(fullpath string, into interface{}) {
 	data, err := os.Open(fullpath)
 	if err != nil {
 		log.Print("Trouble with", fullpath, ":", err)
 		return
 	}
 
+	loadJSON(fullpath, data, into)
+}
+
+func loadJSON(fullpath string, data io.Reader, into interface{}) {
 	dec := json.NewDecoder(data)
 
 	if err := dec.Decode(into); err == io.EOF {
@@ -53,9 +61,20 @@ func loadJSON(fullpath string, into interface{}) {
 	}
 }
 
-func (self *Context) ingestApi(fullpath string) {
+func (ctx *Context) ingestApifromPath(fullpath string) {
 	log.Print("Processing:", fullpath)
-	self.swaggers = append(self.swaggers, &Swagger{})
-	swagger := self.swaggers[len(self.swaggers)-1]
-	loadJSON(fullpath, swagger)
+
+	data, err := os.Open(fullpath)
+	if err != nil {
+		log.Print("Trouble with", fullpath, ":", err)
+		return
+	}
+	ctx.IngestApi(fullpath, data)
+}
+
+func (ctx *Context) IngestApi(aspath string, data io.Reader) {
+	ctx.swaggers = append(ctx.swaggers, &Swagger{})
+	swagger := ctx.swaggers[len(ctx.swaggers)-1]
+
+	loadJSON(aspath, data, swagger)
 }

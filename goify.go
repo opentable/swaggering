@@ -6,19 +6,6 @@ import (
 	"strings"
 )
 
-var badTypes = []string{
-	".",
-	"FieldDescriptor",
-	"DockerNetworkType",
-	"PortMappingType",
-	"ContainerType",
-	"DockerVolumeMode",
-	"Network",
-	"Parameter",
-	"PortMapping",
-	"Type",
-}
-
 func capitalize(word string) string {
 	firstRE := regexp.MustCompile(`^.`)
 	return firstRE.ReplaceAllStringFunc(word, func(match string) string {
@@ -33,9 +20,10 @@ func goName(name string) string {
 	return name
 }
 
+var listRE *regexp.Regexp = regexp.MustCompile(`^List\[([^,]*)]`)
+var mapRE *regexp.Regexp = regexp.MustCompile(`^Map\[([^,]*),([^,]*)]`)
+
 func isAggregate(kind string) bool {
-	listRE := regexp.MustCompile(`^List\[([^,]*)]`)
-	mapRE := regexp.MustCompile(`^Map\[([^,]*),([^,]*)]`)
 	return mapRE.FindStringSubmatch(kind) != nil || listRE.FindStringSubmatch(kind) != nil
 }
 
@@ -102,7 +90,11 @@ func findGoType(context *Context, from, to *DataType) (err error) {
 	var typeName string
 
 	if from.Type == "" {
-		err = context.modelFor(from.Ref, to)
+		if isAggregate(from.Ref) {
+			err = context.aggregateType(from.Ref, to)
+		} else {
+			err = context.modelFor(from.Ref, to)
+		}
 	} else {
 		typeName, err = from.goPrimitiveType()
 		to.setGoType(typeName, err)
@@ -110,29 +102,61 @@ func findGoType(context *Context, from, to *DataType) (err error) {
 	return
 }
 
+func (context *Context) aggregateType(typeDesc string, to *DataType) (err error) {
+	if matches := mapRE.FindStringSubmatch(typeDesc); matches != nil {
+		keys, err := goPrimitiveType(matches[1], "none")
+		if err != nil {
+			return err
+		}
+		values, err := goPrimitiveType(matches[2], "none")
+		if err != nil {
+			return err
+		}
+
+		to.setGoType(fmt.Sprintf("map[%s]%s", keys, values), nil)
+		return nil
+	}
+
+	if matches := listRE.FindStringSubmatch(typeDesc); matches != nil {
+		values, err := goPrimitiveType(matches[1], "none")
+		if err != nil {
+			return err
+		}
+		to.setGoType(fmt.Sprintf("[]%s", values), nil)
+	}
+
+	return fmt.Errorf("Not recognized as an aggregate type: %s", typeDesc)
+}
+
 func (self *DataType) goPrimitiveType() (t string, err error) {
-	switch self.Type {
+	return goPrimitiveType(self.Type, self.Format)
+}
+
+func goPrimitiveType(sType, format string) (t string, err error) {
+	switch sType {
+	default:
+		err = fmt.Errorf("Unrecognized primitive type: %s", sType)
 	case "boolean":
 		t = "bool"
 	case "integer":
-		t = self.Format
+		t = format
 	case "number":
-		switch self.Format {
-		case "float":
+		switch format {
+		case "float", "none":
 			t = "float32"
 		case "double":
 			t = "float64"
 		default:
-			err = fmt.Errorf("Invalid number format: %s", self.Format)
+			err = fmt.Errorf("Invalid number format: %s", format)
 		}
 	case "string":
-		switch self.Format {
-		case "", "byte":
+		switch format {
+		case "", "byte", "none":
 			t = "string"
 		case "date", "data-time":
 			t = "time.Time"
 		default:
-			err = fmt.Errorf("Invalid string format: %s", self.Format)
+			err = fmt.Errorf("Invalid string format: %s", format)
 		}
 	}
 	return

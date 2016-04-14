@@ -1,26 +1,30 @@
 package swaggering
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestResolveModel(t *testing.T) {
 	mod := Model{}
 	mod.Id = "TestModel"
-	testProp := Property{}
 	mod.Properties = make(map[string]*Property)
-	mod.Properties["test"] = &testProp
 
+	testProp := Property{}
 	testProp.Type = "array"
 	testProp.Items.Ref = "TestModel"
+	mod.Properties["test"] = &testProp
 
 	testStr := Property{}
-	mod.Properties["testStr"] = &testStr
 	testStr.Type = "array"
 	testStr.Items.Type = "string"
+	mod.Properties["testStr"] = &testStr
 
 	ctx := Context{}
 	ctx.models = append(ctx.models, &mod)
 
-	resolveModel(&mod, &ctx)
+	ctx.resolveModel(&mod)
 
 	if !mod.GoUses {
 		t.Error("Model isn't marked as used")
@@ -41,4 +45,16 @@ func TestResolveModel(t *testing.T) {
 	if testStr.GoBaseType != "StringList" {
 		t.Error("Property GoBaseType should be StringList, was", testStr.GoBaseType)
 	}
+}
+
+func TestResolveProperty(t *testing.T) {
+	assert := assert.New(t)
+
+	ctx := Context{}
+	mapStrStr := Property{}
+	mapStrStr.Ref = "Map[string,string]"
+
+	ctx.resolveProperty("test", &mapStrStr)
+	assert.Equal("map[string]string", mapStrStr.GoBaseType)
+	assert.Equal("", mapStrStr.GoTypePrefix)
 }
