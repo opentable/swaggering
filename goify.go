@@ -27,13 +27,9 @@ func isAggregate(kind string) bool {
 	return mapRE.FindStringSubmatch(kind) != nil || listRE.FindStringSubmatch(kind) != nil
 }
 
-func (self *DataType) findModel(context *Context) (err error) {
-	return context.modelFor(self.Type, self)
-}
-
 func (self *Parameter) findGoType(context *Context) (err error) {
 	if self.ParamType == "body" {
-		err = self.findModel(context)
+		err = context.modelFor(self.Type, &self.DataType)
 	} else {
 		err = self.DataType.findGoType(context)
 	}
@@ -55,7 +51,7 @@ func (self *Operation) findGoType(context *Context) (err error) {
 		typeName, err := self.goPrimitiveType()
 		self.setGoType(typeName, err)
 	default:
-		self.findModel(context)
+		err = context.modelFor(self.Type, &self.DataType)
 	}
 
 	return
@@ -90,9 +86,7 @@ func findGoType(context *Context, from, to *DataType) (err error) {
 	var typeName string
 
 	if from.Type == "" {
-		if isAggregate(from.Ref) {
-			err = context.aggregateType(from.Ref, to)
-		} else {
+		if err = context.aggregateType(from.Ref, to); err != nil {
 			err = context.modelFor(from.Ref, to)
 		}
 	} else {
@@ -104,35 +98,68 @@ func findGoType(context *Context, from, to *DataType) (err error) {
 
 func (context *Context) aggregateType(typeDesc string, to *DataType) (err error) {
 	if matches := mapRE.FindStringSubmatch(typeDesc); matches != nil {
-		keys, err := goPrimitiveType(matches[1], "none")
-		if err != nil {
-			return err
-		}
-		values, err := goPrimitiveType(matches[2], "none")
-		if err != nil {
-			return err
+		var keys string
+		keys, err = goPrimitiveType(matches[1])
+
+		_, values, terr := goPrimitiveOrModel(context, matches[2])
+		if terr != nil {
+			err = terr
 		}
 
-		to.setGoType(fmt.Sprintf("map[%s]%s", keys, values), nil)
-		return nil
+		to.setGoType(fmt.Sprintf("map[%s]%s", keys, values), err)
+		return
 	}
 
 	if matches := listRE.FindStringSubmatch(typeDesc); matches != nil {
-		values, err := goPrimitiveType(matches[1], "none")
-		if err != nil {
-			return err
+		var values string
+		var prim bool
+
+		prim, values, err = goPrimitiveOrModel(context, matches[1])
+		if prim {
+			to.setGoType(fmt.Sprintf("[]%s", values), err)
+		} else {
+			to.setGoType(fmt.Sprintf("%sList", values), err)
 		}
-		to.setGoType(fmt.Sprintf("[]%s", values), nil)
+		return
 	}
 
 	return fmt.Errorf("Not recognized as an aggregate type: %s", typeDesc)
 }
 
-func (self *DataType) goPrimitiveType() (t string, err error) {
-	return goPrimitiveType(self.Type, self.Format)
+func goPrimitiveOrModel(context *Context, name string) (prim bool, t string, err error) {
+	t, err = goPrimitiveType(name)
+	if err == nil {
+		prim = true
+		return
+	}
+
+	t = name
+	err = context.modelUsed(name)
+
+	return
 }
 
-func goPrimitiveType(sType, format string) (t string, err error) {
+func (self *DataType) goPrimitiveType() (t string, err error) {
+	return goPrimitiveFormattedType(self.Type, self.Format)
+}
+
+func goPrimitiveType(sType string) (t string, err error) {
+	switch sType {
+	default:
+		err = fmt.Errorf("Unrecognized primitive type: %s", sType)
+	case "boolean":
+		t = "bool"
+	case "integer":
+		t = "int64"
+	case "number":
+		t = "float64"
+	case "string":
+		t = "string"
+	}
+	return
+}
+
+func goPrimitiveFormattedType(sType, format string) (t string, err error) {
 	switch sType {
 	default:
 		err = fmt.Errorf("Unrecognized primitive type: %s", sType)

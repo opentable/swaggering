@@ -7,6 +7,8 @@ import (
 )
 
 func TestResolveModel(t *testing.T) {
+	assert := assert.New(t)
+
 	mod := Model{}
 	mod.Id = "TestModel"
 	mod.Properties = make(map[string]*Property)
@@ -26,28 +28,16 @@ func TestResolveModel(t *testing.T) {
 
 	ctx.resolveModel(&mod)
 
-	if !mod.GoUses {
-		t.Error("Model isn't marked as used")
-	}
+	assert.True(mod.GoUses)
 
-	if testProp.GoName != "Test" {
-		t.Error("Property name should be Test, was ", testProp.GoName)
-	}
+	assert.Equal("Test", testProp.GoName)
+	assert.Equal("", testProp.GoTypePrefix)
+	assert.Equal("TestModelList", testProp.GoBaseType)
 
-	if testProp.GoBaseType != "TestModelList" {
-		t.Error("Property GoBaseType should be TestModelList, was ", testProp.GoBaseType)
-	}
-
-	if testProp.GoTypePrefix != "" {
-		t.Error("Property GoTypePrefix should be '', was ", testProp.GoTypePrefix)
-	}
-
-	if testStr.GoBaseType != "StringList" {
-		t.Error("Property GoBaseType should be StringList, was", testStr.GoBaseType)
-	}
+	assert.Equal("StringList", testStr.GoBaseType)
 }
 
-func TestResolveProperty(t *testing.T) {
+func TestResolveProperty_Maps(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx := Context{}
@@ -56,5 +46,24 @@ func TestResolveProperty(t *testing.T) {
 
 	ctx.resolveProperty("test", &mapStrStr)
 	assert.Equal("map[string]string", mapStrStr.GoBaseType)
+	assert.Equal("", mapStrStr.GoTypePrefix)
+}
+
+func TestResolveProperty_ListOfModels(t *testing.T) {
+	assert := assert.New(t)
+
+	mod := Model{}
+	mod.Id = "Thing"
+	mod.Properties = make(map[string]*Property)
+
+	ctx := Context{}
+	ctx.models = append(ctx.models, &mod)
+
+	mapStrStr := Property{}
+	mapStrStr.Ref = "List[Thing]"
+
+	ctx.resolveProperty("test", &mapStrStr)
+
+	assert.Equal("ThingList", mapStrStr.GoBaseType)
 	assert.Equal("", mapStrStr.GoTypePrefix)
 }
