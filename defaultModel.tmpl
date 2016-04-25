@@ -3,7 +3,7 @@ package dtos
 import "io"
 
 {{range $enum := .Enums}}
-type {{$enum.Name}}
+type {{$enum.Name}} string
 
 const (
   {{- range $value := $enum.Values}}
