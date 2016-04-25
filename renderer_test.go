@@ -1,8 +1,12 @@
 package swaggering
 
-import "fmt"
+import (
+	"fmt"
 
-import _ "testing"
+	"github.com/stretchr/testify/assert"
+)
+
+import "testing"
 
 func ExampleSnakeCase() {
 	fmt.Println(snakeCase("HTTPtest"))
@@ -10,4 +14,12 @@ func ExampleSnakeCase() {
 	// Output:
 	// httptest
 	// something_json
+}
+
+func TestRenderer(t *testing.T) {
+	assert := assert.New(t)
+
+	assert.NotPanics(func() {
+		NewRenderer("nowhere")
+	})
 }

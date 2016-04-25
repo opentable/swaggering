@@ -2,13 +2,12 @@ package dtos
 
 import "io"
 
-{{range enum := .Enums}}
-{{- $enumName := {{.GoName}}{{$enum.Name}} }}
-type {{$enumName}}
+{{range $enum := .Enums}}
+type {{$enum.Name}}
 
 const (
-  {{- range value := $enum.Values}}
-  {{$enumName}}{{$value}} {{$enumName}} = "{{$value}}"
+  {{- range $value := $enum.Values}}
+  {{$enum.Name}}{{$value}} {{$enum.Name}} = "{{$value}}"
   {{- end}}
 )
 {{end}}

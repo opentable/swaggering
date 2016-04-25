@@ -89,5 +89,5 @@ func TestResolveProperty_Enum(t *testing.T) {
 	assert.Equal("ThingEnumKind", enum.GoBaseType)
 	assert.Equal("", enum.GoTypePrefix)
 
-	assert.Equal(mod.Enums[0].Name, "EnumKind")
+	assert.Equal(mod.Enums[0].Name, "ThingEnumKind")
 }
