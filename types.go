@@ -7,6 +7,7 @@ type (
 		Type, Format             string
 		Ref                      string `json:"$ref"`
 		Enum                     []string
+		EnumDesc                 Enum
 	}
 
 	Collection struct {
@@ -54,6 +55,12 @@ type (
 		GoUses                         bool
 		Required, SubTypes             []string
 		Properties                     map[string]*Property
+		Enums                          []Enum
+	}
+
+	Enum struct {
+		Name   string
+		Values []string
 	}
 
 	Property struct {

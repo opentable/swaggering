@@ -67,3 +67,27 @@ func TestResolveProperty_ListOfModels(t *testing.T) {
 	assert.Equal("ThingList", mapStrStr.GoBaseType)
 	assert.Equal("", mapStrStr.GoTypePrefix)
 }
+
+func TestResolveProperty_Enum(t *testing.T) {
+	assert := assert.New(t)
+
+	mod := Model{}
+	mod.Id = "Thing"
+	mod.Properties = make(map[string]*Property)
+
+	ctx := Context{}
+	ctx.models = append(ctx.models, &mod)
+
+	enum := Property{}
+	enum.Ref = "EnumKind"
+	enum.Enum = []string{"A", "B", "C"}
+	mod.Properties["enummy"] = &enum
+
+	ctx.resolveModel(&mod)
+
+	assert.Equal(false, enum.GoTypeInvalid)
+	assert.Equal("ThingEnumKind", enum.GoBaseType)
+	assert.Equal("", enum.GoTypePrefix)
+
+	assert.Equal(mod.Enums[0].Name, "EnumKind")
+}

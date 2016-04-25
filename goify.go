@@ -85,7 +85,10 @@ func (self *DataType) findGoType(context *Context) (err error) {
 func findGoType(context *Context, from, to *DataType) (err error) {
 	var typeName string
 
-	if from.Type == "" {
+	if len(from.Enum) > 0 {
+		to.EnumDesc = Enum{Name: from.Ref, Values: from.Enum}
+		to.setGoType(from.Ref, nil)
+	} else if from.Type == "" {
 		if err = context.aggregateType(from.Ref, to); err != nil {
 			err = context.modelFor(from.Ref, to)
 		}

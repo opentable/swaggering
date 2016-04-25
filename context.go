@@ -56,6 +56,11 @@ func (context *Context) resolveModel(model *Model) {
 	model.GoName = model.Id
 	for name, prop := range model.Properties {
 		context.resolveProperty(name, prop)
+		log.Print(prop)
+		if prop.EnumDesc.Name != "" {
+			prop.GoBaseType = string(append([]byte(model.Id), prop.GoBaseType...))
+			model.Enums = append(model.Enums, prop.EnumDesc)
+		}
 	}
 }
 

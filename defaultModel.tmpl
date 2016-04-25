@@ -2,6 +2,17 @@ package dtos
 
 import "io"
 
+{{range enum := .Enums}}
+{{- $enumName := {{.GoName}}{{$enum.Name}} }}
+type {{$enumName}}
+
+const (
+  {{- range value := $enum.Values}}
+  {{$enumName}}{{$value}} {{$enumName}} = "{{$value}}"
+  {{- end}}
+)
+{{end}}
+
 type {{.GoName}} struct {
 {{range $name, $prop := .Properties}}
   {{- if $prop.GoTypeInvalid}}//{{end}}	{{$prop.GoName}} {{$prop.GoTypePrefix}}{{$prop.GoBaseType}} `json:"{{$prop.SwaggerName}}"`
