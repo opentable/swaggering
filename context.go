@@ -59,8 +59,17 @@ func (context *Context) resolveModel(model *Model) {
 		if prop.EnumDesc.Name != "" {
 			prop.GoBaseType = string(append([]byte(model.Id), prop.GoBaseType...))
 			prop.EnumDesc.Name = prop.GoBaseType
+			exists := false
+			for _, e := range model.Enums {
+				if e.Name == prop.EnumDesc.Name {
+					exists = true
+					break
+				}
+			}
 
-			model.Enums = append(model.Enums, prop.EnumDesc)
+			if !exists {
+				model.Enums = append(model.Enums, prop.EnumDesc)
+			}
 		}
 	}
 }

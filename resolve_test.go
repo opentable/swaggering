@@ -81,7 +81,13 @@ func TestResolveProperty_Enum(t *testing.T) {
 	enum := Property{}
 	enum.Ref = "EnumKind"
 	enum.Enum = []string{"A", "B", "C"}
+
+	other := Property{}
+	other.Ref = "EnumKind"
+	other.Enum = []string{"A", "B", "C"}
+
 	mod.Properties["enummy"] = &enum
+	mod.Properties["other"] = &enum
 
 	ctx.resolveModel(&mod)
 
@@ -89,5 +95,6 @@ func TestResolveProperty_Enum(t *testing.T) {
 	assert.Equal("ThingEnumKind", enum.GoBaseType)
 	assert.Equal("", enum.GoTypePrefix)
 
-	assert.Equal(mod.Enums[0].Name, "ThingEnumKind")
+	assert.Equal(1, len(mod.Enums))
+	assert.Equal("ThingEnumKind", mod.Enums[0].Name)
 }
