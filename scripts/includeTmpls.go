@@ -13,6 +13,13 @@ import (
 
 // Reads all .txt files in the current folder
 // and encodes them as strings literals in textfiles.go
+
+const header = `// This file was automatically generated based on the contents of *.tmpl
+// If you need to update this file, change the contents of those files
+// (or add new ones) and run 'go generate'
+
+`
+
 func main() {
 	out, err := os.Create("templates.go")
 	if err != nil {
@@ -24,6 +31,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	out.Write([]byte(header))
 	out.Write([]byte("package swaggering \n\nconst (\n"))
 	for _, f := range fs {
 		if strings.HasSuffix(f.Name(), ".tmpl") {
@@ -35,7 +43,7 @@ func main() {
 			r := newEscaper(f)
 
 			io.Copy(out, r)
-			out.Write([]byte("\"\n"))
+			out.Write([]byte("\"\n\n"))
 		}
 	}
 	out.Write([]byte(")\n"))

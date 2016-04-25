@@ -9,4 +9,7 @@ You'll very likely want to look at opentable/swagger-client-maker to actually ma
 but you're encouraged to review and reuse this library.
 
 
+# Building
 
+Note that the default templates live in defaultApi.tmpl and defaultModel.tmpl -
+if you update those files, you need to run `go generate` to update templates.go.
