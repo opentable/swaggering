@@ -60,6 +60,7 @@ func (context *Context) resolveModel(model *Model) {
 }
 
 func (context *Context) resolveProperty(name string, prop *Property) {
+	prop.SwaggerName = name
 	prop.GoName = capitalize(name)
 	prop.findGoType(context)
 }

@@ -57,7 +57,7 @@ type (
 	}
 
 	Property struct {
-		GoName string
+		SwaggerName, GoName string
 		Collection
 	}
 )

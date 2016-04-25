@@ -1,0 +1,41 @@
+package dtos
+
+import "io"
+
+type {{.GoName}} struct {
+{{range $name, $prop := .Properties}}
+{{- if $prop.GoTypeInvalid}}//{{end}}	{{$prop.GoName}} {{$prop.GoTypePrefix}}{{$prop.GoBaseType}} `json:"$prop.SwaggerName"`
+{{end}}
+}
+
+func (self *{{.GoName}}) Populate(jsonReader io.ReadCloser) (err error) {
+	err = ReadPopulate(jsonReader, self)
+	return
+}
+
+func (self *{{.GoName}}) FormatText() string {
+	return FormatText(self)
+}
+
+func (self *{{.GoName}}) FormatJSON() string {
+	return FormatJSON(self)
+}
+
+type {{.GoName}}List []*{{.GoName}}
+
+func (list *{{.GoName}}List) Populate(jsonReader io.ReadCloser) (err error) {
+	return ReadPopulate(jsonReader, list)
+}
+
+func (list *{{.GoName}}List) FormatText() string {
+	text := []byte{}
+	for _, dto := range *list {
+		text = append(text, (*dto).FormatText()...)
+		text = append(text, "\n"...)
+	}
+	return string(text)
+}
+
+func (list *{{.GoName}}List) FormatJSON() string {
+	return FormatJSON(list)
+}
