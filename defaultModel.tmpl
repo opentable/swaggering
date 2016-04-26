@@ -14,7 +14,11 @@ const (
 
 type {{.GoName}} struct {
 {{range $name, $prop := .Properties}}
-  {{- if $prop.GoTypeInvalid}}//{{end}}	{{$prop.GoName}} {{$prop.GoTypePrefix}}{{$prop.GoBaseType}} `json:"{{$prop.SwaggerName}}",omitempty`
+  {{- if $prop.GoTypeInvalid}}//{{end}}	{{$prop.GoName}} {{$prop.GoTypePrefix}}{{$prop.GoBaseType}} `json:"{{$prop.SwaggerName}}
+  {{- if eq $prop.GoBaseType "string" -}}
+  ,omitempty
+  {{- end -}}
+  "`
 {{end}}
 }
 
