@@ -62,7 +62,7 @@ func ReadPopulate(jsonReader io.ReadCloser, target interface{}) (err error) {
 func MarshalJSON(dto DTO) (buf []byte, err error) {
 	data := make(map[string]interface{})
 	for _, name := range dto.FieldsPresent() {
-		data[name] = dto.GetField(name)
+		data[name], _ = dto.GetField(name)
 	}
 	return json.Marshal(data)
 }
@@ -79,14 +79,14 @@ func presenceFromMap(m map[string]bool) []string {
 
 
 func loadMapIntoDTO(from map[string]interface{}, dto DTO) error {
-	errs := make([]error)
+	errs := make([]error, 0)
 	for name, value := range from {
 		if err := dto.SetField(name, value); err != nil {
 			errs = append(errs, err)
 		}
 	}
 	if len(errs) > 0 {
-		return errors.New(strings.Join(errs))
+		return errors.New(strings.Join(errs...))
 	}
 	return nil
 }
