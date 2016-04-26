@@ -13,6 +13,9 @@ type DTO interface {
 	Populate(io.ReadCloser) error
 	FormatText() string
 	FormatJSON() string
+}
+
+type Fielder interface {
 	FieldsPresent() []string
 	GetField(string) (interface{}, error)
 	SetField(string, interface{}) error
@@ -59,7 +62,7 @@ func ReadPopulate(jsonReader io.ReadCloser, target interface{}) (err error) {
 	return
 }
 
-func MarshalJSON(dto DTO) (buf []byte, err error) {
+func MarshalJSON(dto Fielder) (buf []byte, err error) {
 	data := make(map[string]interface{})
 	for _, name := range dto.FieldsPresent() {
 		data[name], _ = dto.GetField(name)
@@ -78,7 +81,7 @@ func presenceFromMap(m map[string]bool) []string {
 }
 
 
-func loadMapIntoDTO(from map[string]interface{}, dto DTO) error {
+func loadMapIntoDTO(from map[string]interface{}, dto Fielder) error {
 	errs := make([]string, 0)
 	for name, value := range from {
 		if err := dto.SetField(name, value); err != nil {
