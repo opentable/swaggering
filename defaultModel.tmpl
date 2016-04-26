@@ -31,7 +31,7 @@ func (self *{{.GoName}}) Populate(jsonReader io.ReadCloser) (err error) {
 	return ReadPopulate(jsonReader, self)
 }
 
-func (self *{{.GoName}}) MarshalJSON() buf []byte, error {
+func (self *{{.GoName}}) MarshalJSON() (buf []byte, error) {
   return MarshallJSON(buf, self)
 }
 
