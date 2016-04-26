@@ -79,10 +79,10 @@ func presenceFromMap(m map[string]bool) []string {
 
 
 func loadMapIntoDTO(from map[string]interface{}, dto DTO) error {
-	errs := make([]error, 0)
+	errs := make([]string, 0)
 	for name, value := range from {
 		if err := dto.SetField(name, value); err != nil {
-			errs = append(errs, err)
+			errs = append(errs, err.String())
 		}
 	}
 	if len(errs) > 0 {
