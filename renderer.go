@@ -14,20 +14,22 @@ import (
 //go:generate go run scripts/includeTmpls.go
 
 type Renderer struct {
-	targetDir          string
-	modelTmpl, apiTmpl *template.Template
+	targetDir                   string
+	modelTmpl, apiTmpl, dtoTmpl *template.Template
 }
 
 func NewRenderer(tgt string) (renderer *Renderer) {
 	renderer = &Renderer{targetDir: tgt}
 	renderer.apiTmpl = template.Must(template.New("api").Parse(defaultApiTmpl))
 	renderer.modelTmpl = template.Must(template.New("model").Parse(defaultModelTmpl))
+	renderer.dtoTmpl = template.Must(template.New("dto").Parse(dtoGoTmpl))
 
 	return
 }
 
 func RenderService(target string, ingester *Context) {
 	self := NewRenderer(target)
+	self.renderHandlers(ingester)
 	for _, model := range ingester.models {
 		if model.GoUses {
 			log.Print("Model: ", model.GoName)
@@ -45,9 +47,11 @@ func apiPath(urlPath string) string {
 	slashes := regexp.MustCompile("/+")
 	unders := regexp.MustCompile("^_+")
 	brackets := regexp.MustCompile("[}{]")
+
 	urlPath = slashes.ReplaceAllString(urlPath, "_")
 	urlPath = unders.ReplaceAllString(urlPath, "")
 	urlPath = brackets.ReplaceAllString(urlPath, "")
+
 	return urlPath
 }
 
@@ -71,6 +75,10 @@ func snakeCase(symbol string) string {
 		write = append(write, bytes.ToLower(read[found[0]:found[1]])...)
 		read = read[found[1]:]
 	}
+}
+
+func (rnd *Renderer) renderHandlers(ctx *Context) {
+	renderCode(rnd.targetDir, "dtos/dto", rnd.dtoTmpl, ctx)
 }
 
 func (self *Renderer) renderModel(path string, model *Model) {

@@ -1,6 +1,10 @@
 package dtos
 
-import "io"
+import (
+  "fmt"
+  "io"
+)
+
 
 {{range $enum := .Enums}}
 type {{$enum.Name}} string
@@ -13,6 +17,7 @@ const (
 {{end}}
 
 type {{.GoName}} struct {
+  present map[string]bool
 {{range $name, $prop := .Properties}}
   {{- if $prop.GoTypeInvalid}}//{{end}}	{{$prop.GoName}} {{$prop.GoTypePrefix}}{{$prop.GoBaseType}} `json:"{{$prop.SwaggerName}}
   {{- if eq $prop.GoBaseType "string" -}}
@@ -23,8 +28,11 @@ type {{.GoName}} struct {
 }
 
 func (self *{{.GoName}}) Populate(jsonReader io.ReadCloser) (err error) {
-	err = ReadPopulate(jsonReader, self)
-	return
+	return ReadPopulate(jsonReader, self)
+}
+
+func (self *{{.GoName}}) MarshalJSON() buf []byte, error {
+  return MarshallJSON(buf, self)
 }
 
 func (self *{{.GoName}}) FormatText() string {
@@ -33,6 +41,66 @@ func (self *{{.GoName}}) FormatText() string {
 
 func (self *{{.GoName}}) FormatJSON() string {
 	return FormatJSON(self)
+}
+
+func (self *{{.GoName}}) FieldsPresent() []string {
+  return presenceFromMap(self.present)
+}
+
+func (self *{{.GoName}}) SetField(name string, value interface{}) error {
+  if self.present == nil {
+    self.present = make(map[string]bool)
+  }
+  switch name {
+  default:
+    return fmt.Errorf("No such field %s on {{.GoName}}", name)
+  {{range $name, $prop := .Properties}}
+    case "{{$prop.SwaggerName}}", "{{$prop.GoName}}":
+      v, ok := value.({{$prop.GoTypePrefix}}{{$prop.GoBaseType}})
+      if ok {
+        self.{{$prop.GoName}} = v
+        self.present["{{$prop.SwaggerName}}"] = true
+        return nil
+      } else {
+        return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.GoName}}: value %v couldn't be cast to type {{$prop.GoTypePrefix}}{{$prop.GoBaseType}}", value)
+      }
+  {{end}}
+  }
+}
+
+func (self *{{.GoName}}) GetField(name string) (interface{}, error) {
+  switch name {
+  default:
+    return nil, fmt.Errorf("No such field %s on {{.GoName}}", name)
+  {{range $name, $prop := .Properties}}
+    case "{{$prop.SwaggerName}}", "{{$prop.GoName}}":
+    if self.present != nil {
+      if _, ok := self.present["{{$prop.SwaggerName}}"]; ok {
+        return self.{{$prop.GoName}}, nil
+      }
+    }
+    return nil, fmt.Errorf("Field {{$prop.GoName}} no set on {{.GoName}} %+v", self)
+  {{end}}
+  }
+}
+
+func (self *{{.GoName}}) ClearField(name string) error {
+  if self.present == nil {
+    self.present = make(map[string]bool)
+  }
+  switch name {
+  default:
+    return nil, fmt.Errorf("No such field %s on {{.GoName}}", name)
+  {{range $name, $prop := .Properties}}
+  case "{{$prop.SwaggerName}}", "{{$prop.GoName}}":
+    self.present["{{$prop.SwaggerName}}"] = false
+  {{end}}
+  }
+
+}
+
+func (self *{{.GoName}}) LoadMap(from map[string]interface{}) error {
+  return loadMapIntoDTO(from, self)
 }
 
 type {{.GoName}}List []*{{.GoName}}
