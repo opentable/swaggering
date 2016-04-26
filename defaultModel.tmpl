@@ -32,7 +32,7 @@ func (self *{{.GoName}}) Populate(jsonReader io.ReadCloser) (err error) {
 }
 
 func (self *{{.GoName}}) MarshalJSON() ([]byte, error) {
-  return MarshallJSON(self)
+  return MarshalJSON(self)
 }
 
 func (self *{{.GoName}}) FormatText() string {
@@ -75,6 +75,7 @@ func (self *{{.GoName}}) GetField(name string) (interface{}, error) {
   default:
     return nil, fmt.Errorf("No such field %s on {{.GoName}}", name)
   {{range $name, $prop := .Properties}}
+    {{ if not $prop.GoTypeInvalid }}
     case "{{$prop.SwaggerName}}", "{{$prop.GoName}}":
     if self.present != nil {
       if _, ok := self.present["{{$prop.SwaggerName}}"]; ok {
@@ -82,6 +83,7 @@ func (self *{{.GoName}}) GetField(name string) (interface{}, error) {
       }
     }
     return nil, fmt.Errorf("Field {{$prop.GoName}} no set on {{.GoName}} %+v", self)
+    {{end}}
   {{end}}
   }
 }
@@ -94,8 +96,10 @@ func (self *{{.GoName}}) ClearField(name string) error {
   default:
     return fmt.Errorf("No such field %s on {{.GoName}}", name)
   {{range $name, $prop := .Properties}}
+    {{ if not $prop.GoTypeInvalid }}
   case "{{$prop.SwaggerName}}", "{{$prop.GoName}}":
     self.present["{{$prop.SwaggerName}}"] = false
+    {{end}}
   {{end}}
   }
 
