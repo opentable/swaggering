@@ -32,7 +32,7 @@ func (self *{{.GoName}}) Populate(jsonReader io.ReadCloser) (err error) {
 }
 
 func (self *{{.GoName}}) MarshalJSON() ([]byte, error) {
-  return MarshallJSON(buf, self)
+  return MarshallJSON(self)
 }
 
 func (self *{{.GoName}}) FormatText() string {
@@ -92,13 +92,14 @@ func (self *{{.GoName}}) ClearField(name string) error {
   }
   switch name {
   default:
-    return nil, fmt.Errorf("No such field %s on {{.GoName}}", name)
+    return fmt.Errorf("No such field %s on {{.GoName}}", name)
   {{range $name, $prop := .Properties}}
   case "{{$prop.SwaggerName}}", "{{$prop.GoName}}":
     self.present["{{$prop.SwaggerName}}"] = false
   {{end}}
   }
 
+  return nil
 }
 
 func (self *{{.GoName}}) LoadMap(from map[string]interface{}) error {

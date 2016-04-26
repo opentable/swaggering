@@ -67,7 +67,7 @@ func MarshalJSON(dto *DTO) (buf []byte, err error) {
 	return json.Marshal(data)
 }
 
-func presencesFromMap(m map[string]bool) []string {
+func presenceFromMap(m map[string]bool) []string {
 	presence := make([]string, 0)
 	for name, present := range m {
 		if present {
@@ -78,7 +78,7 @@ func presencesFromMap(m map[string]bool) []string {
 }
 
 
-func loadMapToDTO(from map[string]interface{}, dto DTO) error {
+func loadMapIntoDTO(from map[string]interface{}, dto DTO) error {
 	errs := make([]error)
 	for name, value := range from {
 		if err := dto.SetField(name, value); err != nil {
