@@ -59,7 +59,7 @@ func ReadPopulate(jsonReader io.ReadCloser, target interface{}) (err error) {
 	return
 }
 
-func MarshalJSON(dto *DTO) (buf []byte, err error) {
+func MarshalJSON(dto DTO) (buf []byte, err error) {
 	data := make(map[string]interface{})
 	for _, name := range dto.FieldsPresent() {
 		data[name] = dto.GetField(name)
