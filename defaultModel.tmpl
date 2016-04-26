@@ -31,7 +31,7 @@ func (self *{{.GoName}}) Populate(jsonReader io.ReadCloser) (err error) {
 	return ReadPopulate(jsonReader, self)
 }
 
-func (self *{{.GoName}}) MarshalJSON() (buf []byte, error) {
+func (self *{{.GoName}}) MarshalJSON() ([]byte, error) {
   return MarshallJSON(buf, self)
 }
 
@@ -55,6 +55,7 @@ func (self *{{.GoName}}) SetField(name string, value interface{}) error {
   default:
     return fmt.Errorf("No such field %s on {{.GoName}}", name)
   {{range $name, $prop := .Properties}}
+    {{ if not $prop.GoTypeInvalid }}
     case "{{$prop.SwaggerName}}", "{{$prop.GoName}}":
       v, ok := value.({{$prop.GoTypePrefix}}{{$prop.GoBaseType}})
       if ok {
@@ -64,6 +65,7 @@ func (self *{{.GoName}}) SetField(name string, value interface{}) error {
       } else {
         return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.GoName}}: value %v couldn't be cast to type {{$prop.GoTypePrefix}}{{$prop.GoBaseType}}", value)
       }
+    {{end}}
   {{end}}
   }
 }
