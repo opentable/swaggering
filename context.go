@@ -85,6 +85,7 @@ func (context *Context) resolveApis() {
 
 	for _, api := range context.apis {
 		api.BasePackageName = context.packageName
+		log.Printf("api.Path = %+v\n", api.Path)
 		for _, op := range api.Operations {
 			op.Path = api.Path
 			op.GoMethodName = capitalize(op.Nickname)
