@@ -63,7 +63,7 @@ func (self *{{.GoName}}) SetField(name string, value interface{}) error {
         self.present["{{$prop.SwaggerName}}"] = true
         return nil
       } else {
-        return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.GoName}}: value %v couldn't be cast to type {{$prop.GoTypePrefix}}{{$prop.GoBaseType}}", value)
+        return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.GoName}}: value %v(%T) couldn't be cast to type {{$prop.GoTypePrefix}}{{$prop.GoBaseType}}", value, value)
       }
     {{end}}
   {{end}}

@@ -88,6 +88,7 @@ func (context *Context) resolveApis() {
 		for _, op := range api.Operations {
 			op.Path = api.Path
 			op.GoMethodName = capitalize(op.Nickname)
+			log.Printf("op.GoMethodName = %+v\n", op.GoMethodName)
 			err = op.findGoType(context)
 			logErr(err, "Operation %s invalid: %v", op.Nickname)
 
