@@ -2,6 +2,8 @@ package singularity
 
 import "{{.BasePackageName}}/dtos"
 
+
+
 {{range .Operations}}
 {{- if not .GoTypeInvalid -}}
 func (client *Client) {{.GoMethodName}}(

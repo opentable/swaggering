@@ -8,25 +8,30 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"golang.org/x/tools/godoc/vfs"
 	"golang.org/x/tools/imports"
 )
 
-//go:generate go run scripts/includeTmpls.go
+//go:generate inlinefiles . templates.go
+//go:generate inlinefiles --vfs=Templates . vfs_templates.go
 
+// Renderer is responsible for actually turning the parsed API into go code
 type Renderer struct {
 	targetDir                   string
 	modelTmpl, apiTmpl, dtoTmpl *template.Template
 }
 
+// NewRenderer creates a new renderer
 func NewRenderer(tgt string) (renderer *Renderer) {
 	renderer = &Renderer{targetDir: tgt}
-	renderer.apiTmpl = template.Must(template.New("api").Parse(defaultApiTmpl))
-	renderer.modelTmpl = template.Must(template.New("model").Parse(defaultModelTmpl))
-	renderer.dtoTmpl = template.Must(template.New("dto").Parse(dtoGoTmpl))
+	renderer.apiTmpl = template.Must(loadTemplate(Templates, "api", "defaultApi.tmpl"))
+	renderer.modelTmpl = template.Must(loadTemplate(Templates, "model", "defaultModel.tmpl"))
+	renderer.apiTmpl = template.Must(loadTemplate(Templates, "dto", "dtoGo.tmpl"))
 
 	return
 }
 
+// RenderService performs the rendering of a service
 func RenderService(target string, ingester *Context) {
 	self := NewRenderer(target)
 	self.renderHandlers(ingester)
@@ -39,8 +44,22 @@ func RenderService(target string, ingester *Context) {
 	}
 
 	for _, api := range ingester.apis {
-		self.renderApi(apiPath(api.Path), api)
+		self.renderAPI(apiPath(api.Path), api)
 	}
+}
+
+func loadTemplate(fs vfs.Opener, tName, fName string) (*template.Template, error) {
+	tmplFile, err := fs.Open(fName)
+	if err != nil {
+		return nil, err
+	}
+	tmplB := &bytes.Buffer{}
+	_, err = tmplB.ReadFrom(tmplFile)
+	if err != nil {
+		return nil, err
+	}
+	log.Print("\n", tmplB.String())
+	return template.New(tName).Parse(tmplB.String())
 }
 
 func apiPath(urlPath string) string {
@@ -77,16 +96,16 @@ func snakeCase(symbol string) string {
 	}
 }
 
-func (rnd *Renderer) renderHandlers(ctx *Context) {
-	renderCode(rnd.targetDir, "dtos/dto", rnd.dtoTmpl, ctx)
+func (r *Renderer) renderHandlers(ctx *Context) {
+	renderCode(r.targetDir, "dtos/dto", r.dtoTmpl, ctx)
 }
 
-func (self *Renderer) renderModel(path string, model *Model) {
-	renderCode(self.targetDir, path, self.modelTmpl, model)
+func (r *Renderer) renderModel(path string, model *Model) {
+	renderCode(r.targetDir, path, r.modelTmpl, model)
 }
 
-func (self *Renderer) renderApi(path string, api *Api) {
-	renderCode(self.targetDir, path, self.apiTmpl, api)
+func (r *Renderer) renderAPI(path string, api *Api) {
+	renderCode(r.targetDir, path, r.apiTmpl, api)
 }
 
 func renderCode(dir, path string, tmpl *template.Template, context interface{}) (err error) {
@@ -104,6 +123,7 @@ func renderCode(dir, path string, tmpl *template.Template, context interface{}) 
 		log.Print("Problem formatting ", tmpl.Name, " to ", fullpath, ": ", err)
 		formattedBytes = targetBuf.Bytes()
 	}
+
 	if len(formattedBytes) > 0 {
 		targetFile, err := os.Create(fullpath)
 		defer targetFile.Close()

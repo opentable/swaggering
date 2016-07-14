@@ -31,6 +31,14 @@ func (self *{{.GoName}}) Populate(jsonReader io.ReadCloser) (err error) {
 	return ReadPopulate(jsonReader, self)
 }
 
+func (self *{{.GoName}}) Absorb(other DTO) error {
+  if like, ok := other.(*{{.GoName}}); ok {
+    *self = *like
+    return nil
+  }
+  return fmt.Errorf("A {{.GoName}} cannot absorb the values from %v", other)
+}
+
 func (self *{{.GoName}}) MarshalJSON() ([]byte, error) {
   return MarshalJSON(self)
 }
