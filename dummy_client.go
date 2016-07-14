@@ -34,8 +34,8 @@ type (
 // Responses fed to DummyControl will be returned by the DummyClient
 func NewChannelDummy() (DummyClient, DummyControl) {
 	ctrl := DummyControl{
-		dtos:    make(chan dummyDTOResponse),
-		simples: make(chan dummySimpleResponse),
+		dtos:    make(chan dummyDTOResponse, 15),
+		simples: make(chan dummySimpleResponse, 15),
 	}
 
 	clnt := DummyClient{

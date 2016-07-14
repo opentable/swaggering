@@ -36,14 +36,17 @@ type (
 	StringList []string
 )
 
+// Populate loads a StringList from json
 func (list StringList) Populate(jsonReader io.ReadCloser) (err error) {
 	return ReadPopulate(jsonReader, list)
 }
 
+// FormatText formats a StringList as text
 func (list StringList) FormatText() string {
 	return strings.Join(list, "\n")
 }
 
+// FormatJSON formats a StringList to JSON
 func (list StringList) FormatJSON() string {
 	return FormatJSON(list)
 }
@@ -84,6 +87,28 @@ func MarshalJSON(dto Fielder) (buf []byte, err error) {
 	return json.Marshal(data)
 }
 
+// LoadMap loads a map of values into a Fielder
+func LoadMap(dto Fielder, from map[string]interface{}) (Fielder, error) {
+	return dto, dto.LoadMap(from)
+}
+
+// FormatText formats a DTO
+func FormatText(dto interface{}) string {
+	return fmt.Sprintf("%+v", dto)
+}
+
+// FormatJSON formats a dto as JSON
+func FormatJSON(dto interface{}) string {
+	str, err := json.Marshal(dto)
+	if err != nil {
+		return "&lt;<XXXX>>"
+	} else {
+		buf := bytes.Buffer{}
+		json.Indent(&buf, str, "", "  ")
+		return buf.String()
+	}
+}
+
 func presenceFromMap(m map[string]bool) []string {
 	var presence []string
 	for name, present := range m {
@@ -92,10 +117,6 @@ func presenceFromMap(m map[string]bool) []string {
 		}
 	}
 	return presence
-}
-
-func LoadMap(dto Fielder, from map[string]interface{}) (Fielder, error) {
-	return dto, dto.LoadMap(from)
 }
 
 func loadMapIntoDTO(from map[string]interface{}, dto Fielder) error {
@@ -109,21 +130,6 @@ func loadMapIntoDTO(from map[string]interface{}, dto Fielder) error {
 		return errors.New(strings.Join(errs, "\n"))
 	}
 	return nil
-}
-
-func FormatText(dto interface{}) string {
-	return fmt.Sprintf("%+v", dto)
-}
-
-func FormatJSON(dto interface{}) string {
-	str, err := json.Marshal(dto)
-	if err != nil {
-		return "&lt;<XXXX>>"
-	} else {
-		buf := bytes.Buffer{}
-		json.Indent(&buf, str, "", "  ")
-		return buf.String()
-	}
 }
 
 // vim: set ft=go:

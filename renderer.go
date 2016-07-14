@@ -2,6 +2,7 @@ package swaggering
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"os"
@@ -34,7 +35,6 @@ func NewRenderer(tgt string) (renderer *Renderer) {
 // RenderService performs the rendering of a service
 func RenderService(target string, ingester *Context) {
 	self := NewRenderer(target)
-	self.renderHandlers(ingester)
 	for _, model := range ingester.models {
 		if model.GoUses {
 			log.Print("Model: ", model.GoName)
@@ -58,7 +58,6 @@ func loadTemplate(fs vfs.Opener, tName, fName string) (*template.Template, error
 	if err != nil {
 		return nil, err
 	}
-	log.Print("\n", tmplB.String())
 	return template.New(tName).Parse(tmplB.String())
 }
 
@@ -96,43 +95,52 @@ func snakeCase(symbol string) string {
 	}
 }
 
-func (r *Renderer) renderHandlers(ctx *Context) {
-	renderCode(r.targetDir, "dtos/dto", r.dtoTmpl, ctx)
+func (r *Renderer) renderModel(path string, model *Model) error {
+	return renderOut(r.targetDir, path, r.modelTmpl, model)
 }
 
-func (r *Renderer) renderModel(path string, model *Model) {
-	renderCode(r.targetDir, path, r.modelTmpl, model)
+func (r *Renderer) renderAPI(path string, api *Api) error {
+	return renderOut(r.targetDir, path, r.apiTmpl, api)
 }
 
-func (r *Renderer) renderAPI(path string, api *Api) {
-	renderCode(r.targetDir, path, r.apiTmpl, api)
-}
-
-func renderCode(dir, path string, tmpl *template.Template, context interface{}) (err error) {
+func renderOut(dir, path string, tmpl *template.Template, context interface{}) error {
 	fullpath := filepath.Join(dir, path) + ".go"
+	fb, err := renderCode(fullpath, tmpl, context)
+	if err == nil {
+		err = writeCode(fullpath, fb)
+	}
+	return err
+}
+
+func writeCode(fullpath string, formattedBytes []byte) error {
+	if len(formattedBytes) == 0 {
+		return nil
+	}
 	log.Print("Rendering to ", fullpath)
+
+	targetFile, err := os.Create(fullpath)
+	defer targetFile.Close()
+	if err != nil {
+		return fmt.Errorf("Problem creating file %s: %v", fullpath, err)
+	}
+
+	targetFile.Write(formattedBytes)
+
+	return nil
+}
+
+func renderCode(fullpath string, tmpl *template.Template, context interface{}) (fb []byte, err error) {
 	targetBuf := bytes.Buffer{}
 
 	err = tmpl.Execute(&targetBuf, context)
 	if err != nil {
-		log.Fatal("Problem rendering ", tmpl.Name, " to ", fullpath, ": ", err)
+		return nil, fmt.Errorf("Problem rendering %s : %v", tmpl.Name(), err)
 	}
 
-	formattedBytes, err := imports.Process(fullpath, targetBuf.Bytes(), nil)
+	fb, err = imports.Process(fullpath, targetBuf.Bytes(), nil)
 	if err != nil {
-		log.Print("Problem formatting ", tmpl.Name, " to ", fullpath, ": ", err)
-		formattedBytes = targetBuf.Bytes()
+		return nil, fmt.Errorf("Problem formatting %s : %v", tmpl.Name(), err)
 	}
 
-	if len(formattedBytes) > 0 {
-		targetFile, err := os.Create(fullpath)
-		defer targetFile.Close()
-		if err != nil {
-			log.Fatal("Problem creating file ", fullpath, " to render ", tmpl.Name, "into: ", err)
-		}
-
-		targetFile.Write(formattedBytes)
-	}
-
-	return
+	return fb, err
 }

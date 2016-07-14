@@ -23,3 +23,18 @@ func TestRenderer(t *testing.T) {
 		NewRenderer("nowhere")
 	})
 }
+
+func TestRenderModel(t *testing.T) {
+	assert := assert.New(t)
+	r := NewRenderer("/tmp")
+	m := &Model{}
+	m.GoName = "TestModel"
+	m.Properties = make(map[string]*Property)
+	m.Properties["test"] = &Property{
+		SwaggerName: "testSw",
+		GoName:      "TestGo",
+	}
+	m.Properties["test"].GoBaseType = "string"
+	err := r.renderModel("testing", m)
+	assert.NoError(err)
+}
