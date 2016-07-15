@@ -1,0 +1,29 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "F+YOz/6ymsuIxUy511OAdxjyhRI=",
+			"comment": "0.6.2",
+			"path": "github.com/docopt/docopt-go",
+			"revision": "784ddc588536785e7299f7272f39101f7faccc3f"
+		},
+		{
+			"checksumSHA1": "PZBodnDxFJDp08h50zwJC7qwp+c=",
+			"path": "github.com/opentable/swaggering",
+			"revision": "8ab9730f7b5753b73ede5051cdb737755237b599",
+			"revisionTime": "2016-07-14T23:28:49Z"
+		},
+		{
+			"checksumSHA1": "UozwJCtg4ATQvolqbn8iblLjxqY=",
+			"path": "golang.org/x/tools/go/ast/astutil",
+			"revision": "21cc49bd030cf5c6ebaca2fa0e3323628efed6d8"
+		},
+		{
+			"checksumSHA1": "/kuZmP3tatGrYza14yqzPmuJQRI=",
+			"path": "golang.org/x/tools/imports",
+			"revision": "21cc49bd030cf5c6ebaca2fa0e3323628efed6d8"
+		}
+	],
+	"rootPath": "github.com/opentable/swagger-client-maker"
+}

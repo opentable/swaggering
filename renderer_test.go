@@ -38,3 +38,11 @@ func TestRenderModel(t *testing.T) {
 	err := r.renderModel("testing", m)
 	assert.NoError(err)
 }
+
+func TestRenderApi(t *testing.T) {
+	assert := assert.New(t)
+	r := NewRenderer("/tmp")
+	a := &Api{}
+	err := r.renderAPI("testingApi", a)
+	assert.NoError(err)
+}

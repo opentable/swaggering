@@ -27,6 +27,7 @@ func NewRenderer(tgt string) (renderer *Renderer) {
 	renderer = &Renderer{targetDir: tgt}
 	renderer.apiTmpl = template.Must(loadTemplate(Templates, "api", "defaultApi.tmpl"))
 	renderer.modelTmpl = template.Must(loadTemplate(Templates, "model", "defaultModel.tmpl"))
+	renderer.apiTmpl = template.Must(loadTemplate(Templates, "dto", "dtoGo.tmpl"))
 
 	return
 }

@@ -1,6 +1,8 @@
-package {{.BasePackageName}}
+package singularity
 
 import "{{.BasePackageName}}/dtos"
+
+
 
 {{range .Operations}}
 {{- if not .GoTypeInvalid -}}
