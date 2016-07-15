@@ -4,26 +4,36 @@
 	"package": [
 		{
 			"checksumSHA1": "F+YOz/6ymsuIxUy511OAdxjyhRI=",
-			"comment": "0.6.2",
 			"path": "github.com/docopt/docopt-go",
-			"revision": "784ddc588536785e7299f7272f39101f7faccc3f"
-		},
-		{
-			"checksumSHA1": "PZBodnDxFJDp08h50zwJC7qwp+c=",
-			"path": "github.com/opentable/swaggering",
-			"revision": "8ab9730f7b5753b73ede5051cdb737755237b599",
-			"revisionTime": "2016-07-14T23:28:49Z"
+			"revision": "784ddc588536785e7299f7272f39101f7faccc3f",
+			"revisionTime": "2016-02-16T23:20:12Z"
 		},
 		{
 			"checksumSHA1": "UozwJCtg4ATQvolqbn8iblLjxqY=",
+			"origin": "github.com/opentable/swaggering/vendor/golang.org/x/tools/go/ast/astutil",
 			"path": "golang.org/x/tools/go/ast/astutil",
-			"revision": "21cc49bd030cf5c6ebaca2fa0e3323628efed6d8"
+			"revision": "d8bdd28d040ed8916c0250d51ff35a8dcd7a5462",
+			"revisionTime": "2016-07-15T22:32:08Z"
+		},
+		{
+			"checksumSHA1": "2bj5Jq3+RmE2blLnFUfkASYGTlg=",
+			"path": "golang.org/x/tools/godoc/vfs",
+			"revision": "95963e031d86b0e7dafe40fde044d7f610404855",
+			"revisionTime": "2016-06-07T20:47:49Z"
+		},
+		{
+			"checksumSHA1": "Qwc7VecyIh84Ol8n9J9DUwZQtII=",
+			"path": "golang.org/x/tools/godoc/vfs/mapfs",
+			"revision": "95963e031d86b0e7dafe40fde044d7f610404855",
+			"revisionTime": "2016-06-07T20:47:49Z"
 		},
 		{
 			"checksumSHA1": "/kuZmP3tatGrYza14yqzPmuJQRI=",
+			"origin": "github.com/opentable/swaggering/vendor/golang.org/x/tools/imports",
 			"path": "golang.org/x/tools/imports",
-			"revision": "21cc49bd030cf5c6ebaca2fa0e3323628efed6d8"
+			"revision": "d8bdd28d040ed8916c0250d51ff35a8dcd7a5462",
+			"revisionTime": "2016-07-15T22:32:08Z"
 		}
 	],
-	"rootPath": "github.com/opentable/swagger-client-maker"
+	"rootPath": "github.com/opentable/swaggering/cmd/swagger-client-maker"
 }
