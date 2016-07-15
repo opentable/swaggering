@@ -2,6 +2,9 @@ package swaggering
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +29,9 @@ func TestRenderer(t *testing.T) {
 
 func TestRenderModel(t *testing.T) {
 	assert := assert.New(t)
+
 	r := NewRenderer("/tmp")
+
 	m := &Model{}
 	m.GoName = "TestModel"
 	m.Properties = make(map[string]*Property)
@@ -35,14 +40,42 @@ func TestRenderModel(t *testing.T) {
 		GoName:      "TestGo",
 	}
 	m.Properties["test"].GoBaseType = "string"
-	err := r.renderModel("testing", m)
-	assert.NoError(err)
+
+	bytes, err := renderCode("testing", r.modelTmpl, m)
+	if !assert.NoError(err) {
+		writeErrfile("/tmp/swaggering-test/brknModel.go", bytes)
+	}
 }
 
 func TestRenderApi(t *testing.T) {
 	assert := assert.New(t)
 	r := NewRenderer("/tmp")
+
 	a := &Api{}
-	err := r.renderAPI("testingApi", a)
-	assert.NoError(err)
+	a.BasePackageName = "test"
+	a.Operations = append(a.Operations, &Operation{
+		Nickname:     "dtoOp",
+		Method:       "GET",
+		Path:         "/dto-op",
+		GoMethodName: "DtoOp",
+		HasBody:      false,
+	})
+
+	bytes, err := renderCode("testing", r.apiTmpl, a)
+	if !assert.NoError(err) {
+		writeErrfile("/tmp/swaggering-test/brknApi.go", bytes)
+	}
+}
+
+func writeErrfile(path string, bytes []byte) {
+	os.MkdirAll(filepath.Dir(path), os.ModeDir|os.ModePerm)
+	f, err := os.Create(path)
+	defer f.Close()
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	f.Write(bytes)
+	log.Print("Code written to ", path)
+	//log.Print("\n", string(bytes))
 }

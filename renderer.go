@@ -13,7 +13,6 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-//go:generate inlinefiles . templates.go
 //go:generate inlinefiles --vfs=Templates . vfs_templates.go
 
 // Renderer is responsible for actually turning the parsed API into go code
@@ -47,17 +46,22 @@ func RenderService(target string, ingester *Context) {
 	}
 }
 
-func loadTemplate(fs vfs.Opener, tName, fName string) (*template.Template, error) {
+func templateSource(fs vfs.Opener, fName string) (string, error) {
 	tmplFile, err := fs.Open(fName)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	tmplB := &bytes.Buffer{}
 	_, err = tmplB.ReadFrom(tmplFile)
+	return tmplB.String(), err
+}
+
+func loadTemplate(fs vfs.Opener, tName, fName string) (*template.Template, error) {
+	src, err := templateSource(fs, fName)
 	if err != nil {
 		return nil, err
 	}
-	return template.New(tName).Parse(tmplB.String())
+	return template.New(tName).Parse(src)
 }
 
 func apiPath(urlPath string) string {
@@ -138,7 +142,7 @@ func renderCode(fullpath string, tmpl *template.Template, context interface{}) (
 
 	fb, err = imports.Process(fullpath, targetBuf.Bytes(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("Problem formatting %s : %v", tmpl.Name(), err)
+		return targetBuf.Bytes(), fmt.Errorf("Problem formatting %s : %v", tmpl.Name(), err)
 	}
 
 	return fb, err
