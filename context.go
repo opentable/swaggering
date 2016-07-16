@@ -6,15 +6,15 @@ import (
 )
 
 type Context struct {
-	packageName string
-	swaggers    []*Swagger
-	apis        []*Api
-	models      []*Model
-	openModels  []*Model
+	packageName, importName string
+	swaggers                []*Swagger
+	apis                    []*Api
+	models                  []*Model
+	openModels              []*Model
 }
 
-func NewContext(packageName string) (context *Context) {
-	context = &Context{packageName: packageName}
+func NewContext(packageName, importName string) (context *Context) {
+	context = &Context{packageName: packageName, importName: importName}
 	context.swaggers = make([]*Swagger, 0)
 
 	return
@@ -85,6 +85,7 @@ func (context *Context) resolveApis() {
 
 	for _, api := range context.apis {
 		api.BasePackageName = context.packageName
+		api.PackageImportName = context.importName
 		for _, op := range api.Operations {
 			op.Path = api.Path
 			op.GoMethodName = capitalize(op.Nickname)

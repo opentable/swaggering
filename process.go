@@ -1,7 +1,7 @@
 package swaggering
 
-func Process(packageName, serviceSource, renderTarget string) {
-	context := NewContext(packageName)
+func Process(importName, packageName, serviceSource, renderTarget string) {
+	context := NewContext(packageName, importName)
 
 	ProcessService(serviceSource, context)
 	ResolveService(context)

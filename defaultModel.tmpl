@@ -3,6 +3,8 @@ package dtos
 import (
   "fmt"
   "io"
+
+  "github.com/opentable/swaggering"
 )
 
 {{range $enum := .Enums}}
@@ -27,10 +29,10 @@ type {{.GoName}} struct {
 }
 
 func (self *{{.GoName}}) Populate(jsonReader io.ReadCloser) (err error) {
-	return ReadPopulate(jsonReader, self)
+	return swaggering.ReadPopulate(jsonReader, self)
 }
 
-func (self *{{.GoName}}) Absorb(other DTO) error {
+func (self *{{.GoName}}) Absorb(other swaggering.DTO) error {
   if like, ok := other.(*{{.GoName}}); ok {
     *self = *like
     return nil
@@ -39,19 +41,19 @@ func (self *{{.GoName}}) Absorb(other DTO) error {
 }
 
 func (self *{{.GoName}}) MarshalJSON() ([]byte, error) {
-  return MarshalJSON(self)
+  return swaggering.MarshalJSON(self)
 }
 
 func (self *{{.GoName}}) FormatText() string {
-	return FormatText(self)
+	return swaggering.FormatText(self)
 }
 
 func (self *{{.GoName}}) FormatJSON() string {
-	return FormatJSON(self)
+	return swaggering.FormatJSON(self)
 }
 
 func (self *{{.GoName}}) FieldsPresent() []string {
-  return presenceFromMap(self.present)
+  return swaggering.PresenceFromMap(self.present)
 }
 
 func (self *{{.GoName}}) SetField(name string, value interface{}) error {
@@ -114,13 +116,22 @@ func (self *{{.GoName}}) ClearField(name string) error {
 }
 
 func (self *{{.GoName}}) LoadMap(from map[string]interface{}) error {
-  return loadMapIntoDTO(from, self)
+  return swaggering.LoadMapIntoDTO(from, self)
 }
 
 type {{.GoName}}List []*{{.GoName}}
 
+func (self *{{.GoName}}List) Absorb(other swaggering.DTO) error {
+  if like, ok := other.(*{{.GoName}}List); ok {
+    *self = *like
+    return nil
+  }
+  return fmt.Errorf("A {{.GoName}} cannot absorb the values from %v", other)
+}
+
+
 func (list *{{.GoName}}List) Populate(jsonReader io.ReadCloser) (err error) {
-	return ReadPopulate(jsonReader, list)
+	return swaggering.ReadPopulate(jsonReader, list)
 }
 
 func (list *{{.GoName}}List) FormatText() string {
@@ -133,5 +144,5 @@ func (list *{{.GoName}}List) FormatText() string {
 }
 
 func (list *{{.GoName}}List) FormatJSON() string {
-	return FormatJSON(list)
+	return swaggering.FormatJSON(list)
 }

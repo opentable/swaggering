@@ -1,6 +1,6 @@
 package {{.BasePackageName}}
 
-import "{{.BasePackageName}}/dtos"
+import "{{.PackageImportName}}/dtos"
 
 {{range .Operations}}
 {{- if not .GoTypeInvalid -}}

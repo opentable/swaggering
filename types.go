@@ -25,6 +25,7 @@ type (
 	Api struct {
 		Path, Description string
 		BasePackageName   string
+		PackageImportName string
 		Operations        []*Operation
 	}
 

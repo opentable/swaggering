@@ -3,17 +3,17 @@ package swaggering
 import (
 	"bytes"
 	"fmt"
-	"html/template"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
+	"text/template"
 
 	"golang.org/x/tools/godoc/vfs"
 	"golang.org/x/tools/imports"
 )
 
-//go:generate inlinefiles --vfs=Templates . vfs_templates.go
+//go:generate inlinefiles --vfs=Templates --glob=*.tmpl . vfs_templates.go
 
 // Renderer is responsible for actually turning the parsed API into go code
 type Renderer struct {
@@ -37,12 +37,19 @@ func RenderService(target string, ingester *Context) {
 		if model.GoUses {
 			log.Print("Model: ", model.GoName)
 			path := filepath.Join("dtos", snakeCase(model.GoName))
-			self.renderModel(path, model)
+			err := self.renderModel(path, model)
+			if err != nil {
+				log.Print(err)
+			}
 		}
 	}
 
 	for _, api := range ingester.apis {
-		self.renderAPI(apiPath(api.Path), api)
+		log.Print("API: ", api.Path)
+		err := self.renderAPI(apiPath(api.Path), api)
+		if err != nil {
+			log.Print(err)
+		}
 	}
 }
 
@@ -116,10 +123,11 @@ func renderOut(dir, path string, tmpl *template.Template, context interface{}) e
 }
 
 func writeCode(fullpath string, formattedBytes []byte) error {
+	log.Print("Rendering to ", fullpath)
 	if len(formattedBytes) == 0 {
+		log.Print("Empty!")
 		return nil
 	}
-	log.Print("Rendering to ", fullpath)
 
 	targetFile, err := os.Create(fullpath)
 	defer targetFile.Close()
@@ -142,7 +150,7 @@ func renderCode(fullpath string, tmpl *template.Template, context interface{}) (
 
 	fb, err = imports.Process(fullpath, targetBuf.Bytes(), nil)
 	if err != nil {
-		return targetBuf.Bytes(), fmt.Errorf("Problem formatting %s : %v", tmpl.Name(), err)
+		return targetBuf.Bytes(), fmt.Errorf("Problem formatting %s : %v\n%s", tmpl.Name(), err, targetBuf.Bytes())
 	}
 
 	return fb, err

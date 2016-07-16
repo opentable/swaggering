@@ -102,14 +102,15 @@ func FormatJSON(dto interface{}) string {
 	str, err := json.Marshal(dto)
 	if err != nil {
 		return "&lt;<XXXX>>"
-	} else {
-		buf := bytes.Buffer{}
-		json.Indent(&buf, str, "", "  ")
-		return buf.String()
 	}
+	buf := bytes.Buffer{}
+	json.Indent(&buf, str, "", "  ")
+	return buf.String()
 }
 
-func presenceFromMap(m map[string]bool) []string {
+// PresenceFromMap takes a map from names to bools and returns the names that
+// are "present"
+func PresenceFromMap(m map[string]bool) []string {
 	var presence []string
 	for name, present := range m {
 		if present {
@@ -119,7 +120,9 @@ func presenceFromMap(m map[string]bool) []string {
 	return presence
 }
 
-func loadMapIntoDTO(from map[string]interface{}, dto Fielder) error {
+// LoadMapIntoDTO loads a map of key/values into a DTO, setting their presence
+// as they're loaded
+func LoadMapIntoDTO(from map[string]interface{}, dto Fielder) error {
 	errs := make([]string, 0)
 	for name, value := range from {
 		if err := dto.SetField(name, value); err != nil {

@@ -9,7 +9,7 @@ import (
 
 func TestMapStringString(t *testing.T) {
 	assert := assert.New(t)
-	ctx := NewContext("test")
+	ctx := NewContext("test", "github.com/test/test")
 
 	serviceContents := `
 {

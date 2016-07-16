@@ -65,7 +65,7 @@ func (self *Collection) findGoType(context *Context) (err error) {
 				self.GoTypePrefix = ""
 				self.GoBaseType = self.GoBaseType + "List"
 			} else if self.GoBaseType == "string" {
-				self.GoBaseType = "StringList"
+				self.GoBaseType = "swaggering.StringList"
 				self.GoTypePrefix = ""
 				self.GoModel = true
 			} else {

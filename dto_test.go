@@ -78,7 +78,7 @@ func (self *TestModel) FormatJSON() string {
 }
 
 func (self *TestModel) FieldsPresent() []string {
-	return presenceFromMap(self.present)
+	return PresenceFromMap(self.present)
 }
 
 func (self *TestModel) SetField(name string, value interface{}) error {
@@ -135,7 +135,7 @@ func (self *TestModel) ClearField(name string) error {
 }
 
 func (self *TestModel) LoadMap(from map[string]interface{}) error {
-	return loadMapIntoDTO(from, self)
+	return LoadMapIntoDTO(from, self)
 }
 
 type TestModelList []*TestModel

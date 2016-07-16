@@ -27,7 +27,7 @@ type (
 	GenericClient struct {
 		BaseURL string
 		Logger  Logger
-		http    http.Client
+		HTTP    http.Client
 	}
 
 	// ReqError represents failures from requests
@@ -61,7 +61,7 @@ func (gc *GenericClient) Request(method, path string, pathParams, queryParams ur
 	if err != nil {
 		return
 	}
-	res, err := gc.http.Do(req)
+	res, err := gc.HTTP.Do(req)
 	if err != nil {
 		return
 	}
