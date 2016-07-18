@@ -27,59 +27,14 @@ func isAggregate(kind string) bool {
 	return mapRE.FindStringSubmatch(kind) != nil || listRE.FindStringSubmatch(kind) != nil
 }
 
-func (self *Parameter) findGoType(context *Context) (err error) {
-	if self.ParamType == "body" {
-		err = context.modelFor(self.Type, &self.DataType)
+func (p *Parameter) findGoType(context *Context) (err error) {
+	if p.ParamType == "body" {
+		err = context.modelFor(p.Type, &p.DataType)
 	} else {
-		err = self.DataType.findGoType(context)
+		err = p.DataType.findGoType(context)
 	}
 
 	return
-}
-
-func (self *Operation) findGoType(context *Context) (err error) {
-	switch self.Type {
-	case "void":
-		self.GoBaseType = ""
-	case "array":
-		self.Collection.findGoType(context)
-	case "":
-		/* Singularity's swagger has some bugs... */
-		self.Type = "array"
-		self.Collection.findGoType(context)
-	case "string", "bool", "integer", "number":
-		typeName, err := self.goPrimitiveType()
-		self.setGoType(typeName, err)
-	default:
-		err = context.modelFor(self.Type, &self.DataType)
-	}
-
-	return
-}
-
-func (self *Collection) findGoType(context *Context) (err error) {
-	if self.Type == "array" {
-		err = findGoType(context, &self.Items, &self.DataType)
-		if err == nil {
-			if self.GoModel {
-				self.GoTypePrefix = ""
-				self.GoBaseType = self.GoBaseType + "List"
-			} else if self.GoBaseType == "string" {
-				self.GoBaseType = "swaggering.StringList"
-				self.GoTypePrefix = ""
-				self.GoModel = true
-			} else {
-				self.GoTypePrefix = "[]" + self.GoTypePrefix
-			}
-		}
-	} else {
-		err = findGoType(context, &self.DataType, &self.DataType)
-	}
-	return
-}
-
-func (self *DataType) findGoType(context *Context) (err error) {
-	return findGoType(context, self, self)
 }
 
 func findGoType(context *Context, from, to *DataType) (err error) {

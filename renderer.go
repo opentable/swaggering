@@ -13,7 +13,7 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-//go:generate inlinefiles --vfs=Templates --glob=*.tmpl . vfs_templates.go
+//go:generate inlinefiles --vfs=Templates --glob=* ./templates vfs_templates.go
 
 // Renderer is responsible for actually turning the parsed API into go code
 type Renderer struct {
@@ -24,8 +24,14 @@ type Renderer struct {
 // NewRenderer creates a new renderer
 func NewRenderer(tgt string) (renderer *Renderer) {
 	renderer = &Renderer{targetDir: tgt}
-	renderer.apiTmpl = template.Must(loadTemplate(Templates, "api", "defaultApi.tmpl"))
-	renderer.modelTmpl = template.Must(loadTemplate(Templates, "model", "defaultModel.tmpl"))
+
+	renderer.apiTmpl = template.Must(loadTemplate(Templates, "api", "api.tmpl"))
+	opT := renderer.apiTmpl.New("operation")
+	template.Must(loadTemplateInto(Templates, opT, "operation.tmpl"))
+	tyT := opT.New("type")
+	template.Must(loadTemplateInto(Templates, tyT, "type.tmpl"))
+
+	renderer.modelTmpl = template.Must(loadTemplate(Templates, "model", "model.tmpl"))
 
 	return
 }
@@ -64,11 +70,15 @@ func templateSource(fs vfs.Opener, fName string) (string, error) {
 }
 
 func loadTemplate(fs vfs.Opener, tName, fName string) (*template.Template, error) {
+	return loadTemplateInto(fs, template.New(tName), fName)
+}
+
+func loadTemplateInto(fs vfs.Opener, tpl *template.Template, fName string) (*template.Template, error) {
 	src, err := templateSource(fs, fName)
 	if err != nil {
 		return nil, err
 	}
-	return template.New(tName).Parse(src)
+	return tpl.Parse(src)
 }
 
 func apiPath(urlPath string) string {

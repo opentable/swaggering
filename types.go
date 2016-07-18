@@ -1,21 +1,6 @@
 package swaggering
 
 type (
-	DataType struct {
-		GoTypePrefix, GoBaseType string
-		GoTypeInvalid, GoModel   bool
-		Type, Format             string
-		Ref                      string `json:"$ref"`
-		Enum                     []string
-		EnumDesc                 Enum
-	}
-
-	Collection struct {
-		DataType
-		Items       DataType
-		UniqueItems bool
-	}
-
 	Swagger struct {
 		BasePath, ResourcePath string
 		Apis                   []Api
@@ -27,15 +12,6 @@ type (
 		BasePackageName   string
 		PackageImportName string
 		Operations        []*Operation
-	}
-
-	Operation struct {
-		Nickname, Method, Path, Deprecated string
-		GoMethodName                       string
-		HasBody                            bool
-		Parameters                         []*Parameter
-		ResponseMessages                   []*ResponseMessage
-		Collection
 	}
 
 	Parameter struct {
@@ -50,22 +26,8 @@ type (
 		model                  *Model
 	}
 
-	Model struct {
-		Id, Description, Discriminator string
-		GoName                         string
-		GoUses                         bool
-		Required, SubTypes             []string
-		Properties                     map[string]*Property
-		Enums                          []Enum
-	}
-
 	Enum struct {
 		Name   string
 		Values []string
-	}
-
-	Property struct {
-		SwaggerName, GoName string
-		Collection
 	}
 )

@@ -34,6 +34,8 @@ func TestResolveModel(t *testing.T) {
 	assert.Equal("", testProp.GoTypePrefix)
 	assert.Equal("TestModelList", testProp.GoBaseType)
 
+	//assert.Equal("StringList", testStr.GoBaseType)
+	assert.Equal("swaggering", testStr.GoPackage)
 	assert.Equal("StringList", testStr.GoBaseType)
 }
 

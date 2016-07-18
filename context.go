@@ -54,6 +54,7 @@ func (context *Context) resolveModels() {
 func (context *Context) resolveModel(model *Model) {
 	model.GoUses = true
 	model.GoName = model.Id
+	model.GoPackage = "dtos"
 	for name, prop := range model.Properties {
 		context.resolveProperty(name, prop)
 		if prop.EnumDesc.Name != "" {
@@ -112,16 +113,17 @@ func (context *Context) resolveApis() {
 func (context *Context) modelFor(typeName string, to *DataType) (err error) {
 	err = context.modelUsed(typeName)
 	to.GoModel = true
+	to.GoPackage = "dtos"
 	to.GoTypePrefix = "*"
 	to.setGoType(typeName, err)
 	return
 }
 
-func (self *Context) modelUsed(name string) (err error) {
-	for _, model := range self.models {
+func (context *Context) modelUsed(name string) (err error) {
+	for _, model := range context.models {
 		if model.Id == name {
 			if !model.GoUses {
-				self.openModels = append(self.openModels, model)
+				context.openModels = append(context.openModels, model)
 			}
 			return
 		}
