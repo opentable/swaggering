@@ -13,6 +13,13 @@
 			"revision": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
 		{
+			"checksumSHA1": "F+YOz/6ymsuIxUy511OAdxjyhRI=",
+			"origin": "github.com/opentable/swaggering/cmd/swagger-client-maker/vendor/github.com/docopt/docopt-go",
+			"path": "github.com/docopt/docopt-go",
+			"revision": "48c3213297e582f0e3c5aa1ca440ff27f5c4c311",
+			"revisionTime": "2016-07-18T22:12:07Z"
+		},
+		{
 			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -27,6 +34,18 @@
 			"checksumSHA1": "UozwJCtg4ATQvolqbn8iblLjxqY=",
 			"path": "golang.org/x/tools/go/ast/astutil",
 			"revision": "21cc49bd030cf5c6ebaca2fa0e3323628efed6d8"
+		},
+		{
+			"checksumSHA1": "NC6sRRBg4e1wHOkOu2doF24QWh0=",
+			"path": "golang.org/x/tools/godoc/vfs",
+			"revision": "a2a552218a0e22e6fb22469f49ef371b492f6178",
+			"revisionTime": "2016-06-13T23:43:03Z"
+		},
+		{
+			"checksumSHA1": "Qwc7VecyIh84Ol8n9J9DUwZQtII=",
+			"path": "golang.org/x/tools/godoc/vfs/mapfs",
+			"revision": "a2a552218a0e22e6fb22469f49ef371b492f6178",
+			"revisionTime": "2016-06-13T23:43:03Z"
 		},
 		{
 			"checksumSHA1": "/kuZmP3tatGrYza14yqzPmuJQRI=",
