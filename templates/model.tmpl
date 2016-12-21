@@ -42,7 +42,7 @@ func (self *{{.GoName}}) Absorb(other swaggering.DTO) error {
     *self = *like
     return nil
   }
-  return fmt.Errorf("A {{.GoName}} cannot absorb the values from %v", other)
+  return fmt.Errorf("A {{.GoName}} cannot copy the values from %#v", other)
 }
 
 func (self *{{.GoName}}) MarshalJSON() ([]byte, error) {
@@ -136,7 +136,7 @@ func (self *{{.GoName}}List) Absorb(other swaggering.DTO) error {
     *self = *like
     return nil
   }
-  return fmt.Errorf("A {{.GoName}} cannot absorb the values from %v", other)
+  return fmt.Errorf("A {{.GoName}}List cannot copy the values from %#v", other)
 }
 
 
