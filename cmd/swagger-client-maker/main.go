@@ -15,8 +15,8 @@ func main() {
 	Usage: swagger-client-maker [options] <apidoc_dir> <go_project_dir>
 
 	Options:
-	  --import-name=<name>    Force the import name of the package, instead of infering from go_project_dir
-	  --client-package=<name>  Force the client package name, instead of infering from go_project_dir
+	  --import-name=<name>    Force the import name of the package (i.e. 'import github.com/import/name'), instead of infering from go_project_dir
+	  --client-package=<name>  Force the client package name (i.e. 'package client-package'), instead of infering from go_project_dir
 
 	`)
 
