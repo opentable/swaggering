@@ -139,6 +139,11 @@ func writeCode(fullpath string, formattedBytes []byte) error {
 		return nil
 	}
 
+	dir := filepath.Dir(fullpath)
+	if dir != "." {
+		os.MkdirAll(dir, os.ModePerm)
+	}
+
 	targetFile, err := os.Create(fullpath)
 	defer targetFile.Close()
 	if err != nil {
