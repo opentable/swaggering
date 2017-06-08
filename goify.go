@@ -149,6 +149,7 @@ func goPrimitiveFormattedType(sType, format string) (t string, err error) {
 
 func (self *DataType) setGoType(typeName string, err error) {
 	if err != nil {
+		//log.Printf("Invalid type: %s %v", typeName, err)
 		self.GoTypeInvalid = true
 	}
 	self.GoBaseType = typeName
