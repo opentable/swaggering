@@ -4,10 +4,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResolveModel(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 
 	mod := Model{}
 	mod.Id = "TestModel"
@@ -24,19 +26,18 @@ func TestResolveModel(t *testing.T) {
 	mod.Properties["testStr"] = &testStr
 
 	ctx := Context{}
-	ctx.models = append(ctx.models, &mod)
+	//ctx.models = append(ctx.models, &mod)
 
-	ctx.resolveModel(&mod)
+	strct := ctx.resolveModel(&mod)
 
-	assert.True(mod.GoUses)
+	testArray := strct.findField("test")
+	testString := strct.findField("testStr")
 
-	assert.Equal("Test", testProp.GoName)
-	assert.Equal("", testProp.GoTypePrefix)
-	assert.Equal("TestModelList", testProp.GoBaseType)
+	require.NotNil(testArray)
+	require.NotNil(testString)
 
-	//assert.Equal("StringList", testStr.GoBaseType)
-	assert.Equal("swaggering", testStr.GoPackage)
-	assert.Equal("StringList", testStr.GoBaseType)
+	assert.Equal("TestModelList", testArray.Type.TypeString())
+	assert.Equal("swaggering.StringList", testString.Type.TypeString())
 }
 
 func TestResolveProperty_Maps(t *testing.T) {
@@ -46,9 +47,23 @@ func TestResolveProperty_Maps(t *testing.T) {
 	mapStrStr := Property{}
 	mapStrStr.Ref = "Map[string,string]"
 
-	ctx.resolveProperty("test", &mapStrStr)
-	assert.Equal("map[string]string", mapStrStr.GoBaseType)
-	assert.Equal("", mapStrStr.GoTypePrefix)
+	prop, err := ctx.resolveProperty("test", &mapStrStr)
+	if assert.NoError(err) {
+		assert.Equal("map[string]string", prop.Type.TypeString())
+	}
+}
+
+func TestResolveProperty_DeepMaps(t *testing.T) {
+	assert := assert.New(t)
+
+	ctx := Context{}
+	m := Property{}
+	m.Ref = "Map[string,Map[string,string]]"
+
+	prop, err := ctx.resolveProperty("test", &m)
+	if assert.NoError(err) {
+		assert.Equal("map[string]map[string]string", prop.Type.TypeString())
+	}
 }
 
 func TestResolveProperty_ListOfModels(t *testing.T) {
@@ -58,16 +73,19 @@ func TestResolveProperty_ListOfModels(t *testing.T) {
 	mod.Id = "Thing"
 	mod.Properties = make(map[string]*Property)
 
+	swagger := Swagger{Models: map[string]*Model{}}
+	swagger.Models["Thing"] = &mod
+
 	ctx := Context{}
-	ctx.models = append(ctx.models, &mod)
+	ctx.swaggers = append(ctx.swaggers, &swagger)
 
 	mapStrStr := Property{}
 	mapStrStr.Ref = "List[Thing]"
 
-	ctx.resolveProperty("test", &mapStrStr)
-
-	assert.Equal("ThingList", mapStrStr.GoBaseType)
-	assert.Equal("", mapStrStr.GoTypePrefix)
+	prop, err := ctx.resolveProperty("test", &mapStrStr)
+	if assert.NoError(err) {
+		assert.Equal("ThingList", prop.Type.TypeString())
+	}
 }
 
 func TestResolveProperty_Enum(t *testing.T) {
@@ -77,8 +95,11 @@ func TestResolveProperty_Enum(t *testing.T) {
 	mod.Id = "Thing"
 	mod.Properties = make(map[string]*Property)
 
+	swagger := Swagger{Models: map[string]*Model{}}
+	swagger.Models["Thing"] = &mod
+
 	ctx := Context{}
-	ctx.models = append(ctx.models, &mod)
+	ctx.swaggers = append(ctx.swaggers, &swagger)
 
 	enum := Property{}
 	enum.Ref = "EnumKind"
@@ -91,12 +112,14 @@ func TestResolveProperty_Enum(t *testing.T) {
 	mod.Properties["enummy"] = &enum
 	mod.Properties["other"] = &enum
 
-	ctx.resolveModel(&mod)
+	strct := ctx.resolveModel(&mod)
 
-	assert.Equal(false, enum.GoTypeInvalid)
-	assert.Equal("ThingEnumKind", enum.GoBaseType)
-	assert.Equal("", enum.GoTypePrefix)
+	f := strct.findField("enummy")
+	if assert.NotNil(f) {
+		//assert.Equal(false, enum.GoTypeInvalid)
+		assert.Equal("ThingEnumKind", f.Type.TypeString())
+	}
 
-	assert.Equal(1, len(mod.Enums))
-	assert.Equal("ThingEnumKind", mod.Enums[0].Name)
+	assert.Equal(1, len(strct.Enums))
+	assert.Equal("ThingEnumKind", strct.Enums[0].Name)
 }

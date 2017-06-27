@@ -32,16 +32,15 @@ func TestRenderModel(t *testing.T) {
 
 	r := NewRenderer("/tmp")
 
-	m := &Model{}
-	m.GoName = "TestModel"
-	m.Properties = make(map[string]*Property)
-	m.Properties["test"] = &Property{
-		SwaggerName: "testSw",
-		GoName:      "TestGo",
-	}
-	m.Properties["test"].GoBaseType = "string"
+	m := &Struct{}
+	m.Name = "TestModel"
+	m.Fields = append(m.Fields,
+		&Field{
+			Name: "test",
+			Type: &PrimitiveType{Name: "string"},
+		})
 
-	bytes, err := renderCode("testing", r.modelTmpl, m)
+	bytes, err := r.renderStruct("testing", m)
 	if !assert.NoError(err) {
 		writeErrfile("/tmp/swaggering-test/brknModel.go", bytes)
 	}
@@ -51,17 +50,16 @@ func TestRenderApi(t *testing.T) {
 	assert := assert.New(t)
 	r := NewRenderer("/tmp")
 
-	a := &Api{}
+	a := &CodeFile{}
 	a.BasePackageName = "test"
-	a.Operations = append(a.Operations, &Operation{
-		Nickname:     "dtoOp",
-		Method:       "GET",
-		Path:         "/dto-op",
-		GoMethodName: "DtoOp",
-		HasBody:      false,
+	a.Methods = append(a.Methods, &Method{
+		Name:    "DtoOp",
+		Method:  "GET",
+		Path:    "/dto-op",
+		HasBody: false,
 	})
 
-	bytes, err := renderCode("testing", r.apiTmpl, a)
+	bytes, err := r.renderCodeFile("testing", a)
 	writeErrfile("/tmp/swaggering-test/brknApi.go", bytes)
 	if !assert.NoError(err) {
 		writeErrfile("/tmp/swaggering-test/brknApi.go", bytes)

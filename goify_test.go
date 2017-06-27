@@ -23,15 +23,15 @@ func TestStringGoify(t *testing.T) {
 		]
 	}`
 
-	dt := DataType{}
+	dt := SwaggerType{}
 	json.Unmarshal([]byte(dtJSON), &dt)
 
-	tf, err := dt.goPrimitiveType()
+	tf, err := goPrimitiveType(dt.Type)
 	if err != nil {
 		t.Fatalf("Error should be nil, was: %v", err)
 	}
 
-	if tf != "string" {
+	if tf.TypeString() != "string" {
 		t.Fatalf("Formatted type should be 'string' was %v", t)
 	}
 }
@@ -44,11 +44,13 @@ func TestGoifyMapToMap(t *testing.T) {
 	}`
 
 	ctx := Context{}
-	dt := DataType{}
+	dt := SwaggerType{}
 	json.Unmarshal([]byte(dtJSON), &dt)
 
-	err := dt.findGoType(&ctx)
+	typ, err := findGoType(&ctx, &dt)
 	assert.NoError(t, err)
-	assert.Equal(t, `map[int]map[string]string`, dt.Type)
+	if assert.NotNil(t, typ) {
+		assert.Equal(t, `map[int]map[string]string`, typ.TypeString())
+	}
 
 }

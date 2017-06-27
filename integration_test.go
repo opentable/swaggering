@@ -5,10 +5,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMapStringString(t *testing.T) {
 	assert := assert.New(t)
+	require := require.New(t)
 	ctx := NewContext("test", "github.com/test/test")
 
 	serviceContents := `
@@ -56,12 +58,20 @@ func TestMapStringString(t *testing.T) {
 }
 	`
 
-	ctx.IngestApi("deploys.json", bytes.NewBufferString(serviceContents))
+	ctx.IngestApi("deploys", "deploys.json", bytes.NewBufferString(serviceContents))
 
 	ctx.Resolve()
 
-	assert.Equal("SingularityDeploy", ctx.models[0].Id)
-	envProp := ctx.models[0].Properties["env"]
-	assert.Equal("map[string]string", envProp.Collection.GoBaseType)
-	assert.Equal("", envProp.Collection.GoTypePrefix)
+	require.Contains(ctx.structs, "SingularityDeploy")
+	dep := ctx.structs["SingularityDeploy"]
+	var envField *Field
+	for _, f := range dep.Fields {
+		if f.Name == "env" {
+			envField = f
+			break
+		}
+	}
+	require.NotNil(envField)
+
+	assert.Equal("map[string]string", envField.Type.TypeString())
 }

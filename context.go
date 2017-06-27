@@ -8,9 +8,10 @@ import (
 type Context struct {
 	packageName, importName string
 	swaggers                []*Swagger
-	apis                    []*Api
-	models                  []*Model
 	openModels              []*Model
+
+	codefiles []*CodeFile
+	structs   map[string]*Struct
 }
 
 func NewContext(packageName, importName string) (context *Context) {
@@ -21,22 +22,140 @@ func NewContext(packageName, importName string) (context *Context) {
 }
 
 func (context *Context) Resolve() {
-	for _, swagger := range context.swaggers {
-		for adx := range swagger.Apis {
-			context.apis = append(context.apis, &swagger.Apis[adx])
-		}
-		for _, model := range swagger.Models {
-			context.models = append(context.models, model)
-		}
-	}
 
-	log.Printf("  Found %d apis", len(context.apis))
-	log.Printf("  Found %d models", len(context.models))
+	/*
+		for _, swagger := range context.swaggers {
+			for adx := range swagger.Apis {
+				context.apis = append(context.apis, &swagger.Apis[adx])
+			}
+			for _, model := range swagger.Models {
+				context.models = append(context.models, model)
+			}
+		}
 
-	context.openModels = make([]*Model, 0, len(context.models))
+		log.Printf("  Found %d apis", len(context.apis))
+		log.Printf("  Found %d models", len(context.models))
+
+		context.openModels = make([]*Model, 0, len(context.models))
+	*/
 
 	context.resolveApis()
 	context.resolveModels()
+}
+
+func (context *Context) resolveApis() {
+	for _, swagger := range context.swaggers {
+		file := CodeFile{}
+		context.codefiles = append(context.codefiles, &file)
+
+		file.BasePackageName = context.packageName
+		file.PackageImportName = context.importName
+		file.Name = swagger.name
+
+		for _, api := range swagger.Apis {
+
+			for _, op := range api.Operations {
+				method := Method{}
+				file.Methods = append(file.Methods, &method)
+
+				method.Path = api.Path
+				method.Name = capitalize(op.Nickname)
+
+				mtype, err := context.responseType(op)
+				if err != nil {
+					logErr(err, "Operation %s invalid: %v", op.Nickname)
+					method.invalidity = true
+				}
+
+				if mtype != nil {
+					method.DTORequest = !isPrimitive(mtype)
+					method.Results = append(method.Results, &Field{Name: "response", Type: mtype})
+				}
+
+				for _, parm := range op.Parameters {
+					field := Field{Name: parm.Name}
+					method.Params = append(method.Params, &field)
+
+					t, err := parm.findGoType(context)
+					logErr(err, "Operation %s invalid: parameter %s: %v", op.Nickname, parm.Name)
+					field.Type = t
+
+					if !t.Valid() {
+						method.invalidity = true
+					}
+
+					if parm.Name == "body" {
+						method.HasBody = true
+					}
+				}
+			}
+		}
+	}
+}
+
+func (context *Context) responseType(op *Operation) (TypeStringer, error) {
+	var rms string
+	for _, rm := range op.ResponseMessages {
+		if rm.ResponseModel != "" {
+			if rms != "" {
+				log.Printf("Operation %q has multiple response models - using %q, (not %q) but probably swaggering needs to be extended.",
+					op.Nickname, rms, rm.ResponseModel)
+				continue
+			}
+			rms = rm.ResponseModel
+		}
+	}
+
+	if rms != "" {
+		rmst := SwaggerType{Ref: rms}
+		return findGoType(context, &rmst)
+	}
+
+	return nil, nil
+}
+
+func (context *Context) modelFor(typeName string) (TypeStringer, error) {
+	t, err := context.modelUsed(typeName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Pointer{to: t}, nil
+	/*
+		to.GoModel = true
+		to.GoPackage = "dtos"
+		to.GoTypePrefix = "*"
+		to.setGoType(typeName, err)
+	*/
+}
+
+func (context *Context) modelUsed(name string) (TypeStringer, error) {
+	for _, swagger := range context.swaggers {
+		for _, model := range swagger.Models {
+			if model.Id == name {
+				if !model.GoUses {
+					context.openModels = append(context.openModels, model)
+				}
+
+				return context.getStruct(name)
+			}
+		}
+	}
+	return nil, fmt.Errorf("model %q doesn't appear in known models", name)
+}
+
+func (context *Context) getStruct(name string) (*Struct, error) {
+	if context.structs == nil {
+		context.structs = map[string]*Struct{}
+	}
+	if s, has := context.structs[name]; has {
+		return s, nil
+	}
+	context.structs[name] = &Struct{
+		Package: "dtos",
+		Name:    name,
+	}
+	return context.structs[name], nil
 }
 
 func (context *Context) resolveModels() {
@@ -51,84 +170,46 @@ func (context *Context) resolveModels() {
 	}
 }
 
-func (context *Context) resolveModel(model *Model) {
+func (context *Context) resolveModel(model *Model) *Struct {
 	model.GoUses = true
-	model.GoName = model.Id
-	model.GoPackage = "dtos"
+
+	s, err := context.getStruct(model.Id)
+	logErr(err, "when getting struct by name: %q", model.Id)
+
 	for name, prop := range model.Properties {
-		context.resolveProperty(name, prop)
-		if prop.EnumDesc.Name != "" {
-			prop.GoBaseType = string(append([]byte(model.Id), prop.GoBaseType...))
-			prop.EnumDesc.Name = prop.GoBaseType
+		field, err := context.resolveProperty(name, prop)
+		logErr(err, "when resolving property type")
+
+		if field == nil {
+			continue
+		}
+
+		switch enum := field.Type.(type) {
+		case nil:
+		case *EnumType:
+			enum.HostModel = model.Id
+
 			exists := false
 			for _, e := range model.Enums {
-				if e.Name == prop.EnumDesc.Name {
+				if e.Name == enum.Name {
 					exists = true
 					break
 				}
 			}
 
 			if !exists {
-				model.Enums = append(model.Enums, prop.EnumDesc)
-			}
-		}
-	}
-}
-
-func (context *Context) resolveProperty(name string, prop *Property) {
-	prop.SwaggerName = name
-	prop.GoName = capitalize(name)
-	prop.findGoType(context)
-}
-
-func (context *Context) resolveApis() {
-	var err error
-
-	for _, api := range context.apis {
-		api.BasePackageName = context.packageName
-		api.PackageImportName = context.importName
-		for _, op := range api.Operations {
-			op.Path = api.Path
-			op.GoMethodName = capitalize(op.Nickname)
-			err = op.findGoType(context)
-			logErr(err, "Operation %s invalid: %v", op.Nickname)
-
-			for _, parm := range op.Parameters {
-				err = parm.findGoType(context)
-				logErr(err, "Operation %s invalid: parameter %s: %v", op.Nickname, parm.Name)
-
-				if parm.GoTypeInvalid {
-					op.GoTypeInvalid = true
-				}
-
-				if parm.Name == "body" {
-					op.HasBody = true
-				}
+				s.Enums = append(s.Enums, enum)
 			}
 		}
 	}
 
+	return s
 }
 
-func (context *Context) modelFor(typeName string, to *DataType) (err error) {
-	err = context.modelUsed(typeName)
-	to.GoModel = true
-	to.GoPackage = "dtos"
-	to.GoTypePrefix = "*"
-	to.setGoType(typeName, err)
-	return
-}
-
-func (context *Context) modelUsed(name string) (err error) {
-	for _, model := range context.models {
-		if model.Id == name {
-			if !model.GoUses {
-				context.openModels = append(context.openModels, model)
-			}
-			return
-		}
-
+func (context *Context) resolveProperty(name string, prop *Property) (*Field, error) {
+	t, err := prop.findGoType(context) //uses embedded Collection's impl
+	if err != nil {
+		return nil, err
 	}
-	err = fmt.Errorf("Model %q doesn't appear in known models.", name)
-	return
+	return &Field{Name: capitalize(name), Type: t}, nil
 }

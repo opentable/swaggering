@@ -39,20 +39,18 @@ func NewRenderer(tgt string) (renderer *Renderer) {
 // RenderService performs the rendering of a service
 func RenderService(target string, ingester *Context) {
 	self := NewRenderer(target)
-	for _, model := range ingester.models {
-		if model.GoUses {
-			log.Print("Model: ", model.GoName)
-			path := filepath.Join("dtos", snakeCase(model.GoName))
-			err := self.renderModel(path, model)
-			if err != nil {
-				log.Print(err)
-			}
+	for _, strct := range ingester.structs {
+		log.Print("DTO Struct: ", strct.Name)
+		path := filepath.Join("dtos", snakeCase(strct.Name))
+		err := self.writeStruct(path, strct)
+		if err != nil {
+			log.Print(err)
 		}
 	}
 
-	for _, api := range ingester.apis {
-		log.Print("API: ", api.Path)
-		err := self.renderAPI(apiPath(api.Path), api)
+	for _, codefile := range ingester.codefiles {
+		log.Printf("API code file: %s", codefile.Name)
+		err := self.writeCodeFile(codefile.Name, codefile)
 		if err != nil {
 			log.Print(err)
 		}
@@ -115,24 +113,50 @@ func snakeCase(symbol string) string {
 	}
 }
 
-func (r *Renderer) renderModel(path string, model *Model) error {
-	return renderOut(r.targetDir, path, r.modelTmpl, model)
+func (r *Renderer) writeStruct(path string, strct *Struct) error {
+	fullpath := r.fullpath(path)
+	fb, err := r.renderStruct(fullpath, strct)
+	return writeCode(fullpath, fb, err)
 }
 
-func (r *Renderer) renderAPI(path string, api *Api) error {
-	return renderOut(r.targetDir, path, r.apiTmpl, api)
+func (r *Renderer) writeCodeFile(path string, cfile *CodeFile) error {
+	fullpath := r.fullpath(path)
+	fb, err := r.renderCodeFile(fullpath, cfile)
+	return writeCode(fullpath, fb, err)
 }
 
-func renderOut(dir, path string, tmpl *template.Template, context interface{}) error {
-	fullpath := filepath.Join(dir, path) + ".go"
-	fb, err := renderCode(fullpath, tmpl, context)
-	if err == nil {
-		err = writeCode(fullpath, fb)
+func (r *Renderer) fullpath(path string) string {
+	return filepath.Join(r.targetDir, path) + ".go"
+}
+
+func (r *Renderer) renderStruct(fullpath string, strct *Struct) ([]byte, error) {
+	return renderCode(fullpath, r.modelTmpl, strct)
+}
+
+func (r *Renderer) renderCodeFile(path string, cfile *CodeFile) ([]byte, error) {
+	return renderCode(path, r.apiTmpl, cfile)
+}
+
+func renderCode(fullpath string, tmpl *template.Template, context interface{}) (fb []byte, err error) {
+	targetBuf := bytes.Buffer{}
+
+	err = tmpl.Execute(&targetBuf, context)
+	if err != nil {
+		return nil, fmt.Errorf("Problem rendering %s : %v", tmpl.Name(), err)
 	}
-	return err
+
+	fb, err = imports.Process(fullpath, targetBuf.Bytes(), nil)
+	if err != nil {
+		return targetBuf.Bytes(), fmt.Errorf("Problem formatting %s : %v\n%s", tmpl.Name(), err, targetBuf.Bytes())
+	}
+
+	return fb, err
 }
 
-func writeCode(fullpath string, formattedBytes []byte) error {
+func writeCode(fullpath string, formattedBytes []byte, err error) error {
+	if err != nil {
+		return err
+	}
 	log.Print("Rendering to ", fullpath)
 	if len(formattedBytes) == 0 {
 		log.Print("Empty!")
@@ -153,20 +177,4 @@ func writeCode(fullpath string, formattedBytes []byte) error {
 	targetFile.Write(formattedBytes)
 
 	return nil
-}
-
-func renderCode(fullpath string, tmpl *template.Template, context interface{}) (fb []byte, err error) {
-	targetBuf := bytes.Buffer{}
-
-	err = tmpl.Execute(&targetBuf, context)
-	if err != nil {
-		return nil, fmt.Errorf("Problem rendering %s : %v", tmpl.Name(), err)
-	}
-
-	fb, err = imports.Process(fullpath, targetBuf.Bytes(), nil)
-	if err != nil {
-		return targetBuf.Bytes(), fmt.Errorf("Problem formatting %s : %v\n%s", tmpl.Name(), err, targetBuf.Bytes())
-	}
-
-	return fb, err
 }

@@ -20,136 +20,135 @@ func goName(name string) string {
 	return name
 }
 
-var listRE *regexp.Regexp = regexp.MustCompile(`^List\[([^,]*)]`)
-var mapRE *regexp.Regexp = regexp.MustCompile(`^Map\[([^,]*),([^,]*)]`)
+var listRE = regexp.MustCompile(`^List\[([^,]*)]`)
+var mapRE = regexp.MustCompile(`^Map\[([^,]*),(.*)]`)
 
+// c.f. the embeded relationship of Parameter -> SwaggerType
+func (p *Parameter) findGoType(context *Context) (TypeStringer, error) {
+	if p.ParamType == "body" {
+		return context.modelFor(p.Type)
+	}
+	return findGoType(context, &p.SwaggerType)
+}
+
+// c.f. the embeded relationship of Collection -> SwaggerType
+func (c *Collection) findGoType(context *Context) (TypeStringer, error) {
+	if c.Type == "array" {
+		t, err := findGoType(context, &c.Items)
+		if err != nil {
+			return nil, err
+		}
+
+		return &SliceType{items: t}, nil
+	}
+	return findGoType(context, &c.SwaggerType)
+}
 func isAggregate(kind string) bool {
 	return mapRE.FindStringSubmatch(kind) != nil || listRE.FindStringSubmatch(kind) != nil
 }
 
-func (p *Parameter) findGoType(context *Context) (err error) {
-	if p.ParamType == "body" {
-		err = context.modelFor(p.Type, &p.DataType)
-	} else {
-		err = p.DataType.findGoType(context)
-	}
-
-	return
-}
-
-func findGoType(context *Context, from *DataType) (string, error) {
-	var typeName string
-
+func findGoType(context *Context, from *SwaggerType) (TypeStringer, error) {
 	switch {
 	default:
-		return from.goPrimitiveType()
+		return goPrimitiveFormattedType(from.Type, from.Format)
 	case len(from.Enum) > 0:
-		return from.Ref, nil
+		return &EnumType{
+			Name:   from.Ref,
+			Values: from.Enum,
+		}, nil
 	case from.Type == "":
-		return refType(context, from.Ref)
+		return refType(context, from)
 	}
-	return
 }
 
-func refType(context *Context, typeDesc string) (string, error) {
-	t, err := context.aggregateType(from.Ref, to)
+func refType(context *Context, typeDesc *SwaggerType) (TypeStringer, error) {
+	t, err := aggregateType(context, typeDesc)
 	if err != nil {
-		return from.Ref, context.modelFor(from.Ref, to)
+		return context.modelFor(typeDesc.Ref)
 	}
 	return t, err
 }
 
-func aggregateItemType(context *Context, typeDesc string) (string, error) {
-	t, err := context.aggregateType(from.Ref, to)
+func aggregateItemType(context *Context, typeDesc *SwaggerType) (TypeStringer, error) {
+	t, err := aggregateType(context, typeDesc)
 	if err != nil {
-		_, t, err := goPrimitiveOrModel(context, typeDesc)
-		return t, err
+		return goPrimitiveOrModel(context, typeDesc.Type)
 	}
 	return t, err
 }
 
-func (context *Context) aggregateType(typeDesc string) (string, error) {
-	if matches := mapRE.FindStringSubmatch(typeDesc); matches != nil {
-		var keys string
-		keys, err = goPrimitiveType(matches[1])
-
-		_, values, terr := goPrimitiveOrModel(context, matches[2])
-		if terr != nil {
-			err = terr
+func aggregateType(context *Context, typeDesc *SwaggerType) (TypeStringer, error) {
+	if matches := mapRE.FindStringSubmatch(typeDesc.Type); matches != nil {
+		keys, err := goPrimitiveType(matches[1])
+		if err != nil {
+			return nil, err
 		}
 
-		return fmt.Sprintf("map[%s]%s", keys, values), err
-	}
-
-	if matches := listRE.FindStringSubmatch(typeDesc); matches != nil {
-		var values string
-		var prim bool
-
-		prim, values, err = goPrimitiveOrModel(context, matches[1])
-		if prim {
-			return fmt.Sprintf("[]%s", values), err
+		itemSwagger := &SwaggerType{Type: matches[2]}
+		values, err := aggregateItemType(context, itemSwagger)
+		if err != nil {
+			return nil, err
 		}
-		return fmt.Sprintf("%sList", values), err
+
+		return &MapType{
+			keys:   keys,
+			values: values,
+		}, nil
+
 	}
 
-	return "", fmt.Errorf("Not recognized as an aggregate type: %s", typeDesc)
-}
+	if matches := listRE.FindStringSubmatch(typeDesc.Type); matches != nil {
+		values, err := goPrimitiveOrModel(context, matches[1])
+		if err != nil {
+			return nil, err
+		}
 
-func goPrimitiveOrModel(context *Context, name string) (prim bool, t string, err error) {
-	t, err = goPrimitiveType(name)
-	if err == nil {
-		prim = true
-		return
+		return &SliceType{items: values}, nil
 	}
 
-	t = name
-	err = context.modelUsed(name)
-
-	return
+	return nil, fmt.Errorf("Not recognized as an aggregate type: %s", typeDesc)
 }
 
-func goPrimitiveType(sType string) (t string, err error) {
+func goPrimitiveOrModel(context *Context, name string) (TypeStringer, error) {
+	t, err := goPrimitiveType(name)
+	if err != nil {
+		return context.modelUsed(name)
+	}
+	return t, nil
+}
+
+func goPrimitiveType(sType string) (TypeStringer, error) {
+	return goPrimitiveFormattedType(sType, "")
+}
+
+func goPrimitiveFormattedType(sType, format string) (TypeStringer, error) {
+	var t string
 	switch sType {
 	default:
-		err = fmt.Errorf("Unrecognized primitive type: %s", sType)
+		return nil, fmt.Errorf("Unrecognized primitive type: %s", sType)
 	case "boolean":
 		t = "bool"
 	case "integer":
-		t = "int64"
-	case "number":
-		t = "float64"
-	case "string":
-		t = "string"
-	}
-	return
-}
-
-func goPrimitiveFormattedType(sType, format string) (t string, err error) {
-	switch sType {
-	default:
-		err = fmt.Errorf("Unrecognized primitive type: %s", sType)
-	case "boolean":
-		t = "bool"
-	case "integer":
-		t = format
+		switch format {
+		default:
+			t = "int64"
+		case "int32":
+			t = "int32"
+		}
 	case "number":
 		switch format {
 		case "float", "none":
 			t = "float32"
-		case "double":
-			t = "float64"
 		default:
-			err = fmt.Errorf("Invalid number format: %s", format)
+			t = "float64"
 		}
 	case "string":
 		switch format {
-		case "", "byte", "none":
-			t = "string"
 		case "date", "data-time":
 			t = "time.Time"
 		default:
-			err = fmt.Errorf("Invalid string format: %s", format)
+			t = "string"
 		}
 	}
-	return
+	return &PrimitiveType{Name: t}, nil
 }
