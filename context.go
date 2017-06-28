@@ -55,45 +55,52 @@ func (context *Context) resolveApis() {
 		for _, api := range swagger.Apis {
 
 			for _, op := range api.Operations {
-				method := Method{}
-				file.Methods = append(file.Methods, &method)
-
+				method := context.resolveOperation(op)
 				method.Path = api.Path
-				method.Name = capitalize(op.Nickname)
 
-				mtype, err := op.findGoType(context)
-				//context.responseType(op)
-				if err != nil {
-					logErr(err, "Operation %s invalid: %v", op.Nickname)
-					method.invalidity = true
-				}
-
-				if mtype != nil {
-					method.DTORequest = !isPrimitive(mtype)
-					method.Results = append(method.Results, &Field{Name: "response", TypeStringer: mtype})
-				}
-
-				for _, parm := range op.Parameters {
-					field := Field{Name: parm.Name}
-					prm := Param{Field: &field, ParamType: parm.ParamType}
-					method.Params = append(method.Params, &prm)
-
-					t, err := parm.findGoType(context)
-					logErr(err, "Operation %s invalid: parameter %s: %v", op.Nickname, parm.Name)
-
-					field.TypeStringer = t
-
-					if !t.Valid() {
-						method.invalidity = true
-					}
-
-					if parm.Name == "body" {
-						method.HasBody = true
-					}
-				}
+				file.Methods = append(file.Methods, method)
 			}
 		}
 	}
+}
+
+func (context *Context) resolveOperation(op *Operation) *Method {
+	method := Method{}
+
+	method.Name = capitalize(op.Nickname)
+	method.Method = op.Method
+
+	mtype, err := op.findGoType(context)
+	//context.responseType(op)
+	if err != nil {
+		logErr(err, "Operation %s invalid: %v", op.Nickname)
+		method.invalidity = true
+	}
+
+	if mtype != nil {
+		method.DTORequest = !isPrimitive(mtype)
+		method.Results = append(method.Results, &Field{Name: "response", TypeStringer: mtype})
+	}
+
+	for _, parm := range op.Parameters {
+		field := Field{Name: parm.Name}
+		prm := Param{Field: &field, ParamType: parm.ParamType}
+		method.Params = append(method.Params, &prm)
+
+		t, err := parm.findGoType(context)
+		logErr(err, "Operation %s invalid: parameter %s: %v", op.Nickname, parm.Name)
+
+		field.TypeStringer = t
+
+		if !t.Valid() {
+			method.invalidity = true
+		}
+
+		if parm.Name == "body" {
+			method.HasBody = true
+		}
+	}
+	return &method
 }
 
 func (context *Context) responseType(op *Operation) (TypeStringer, error) {

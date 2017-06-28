@@ -32,7 +32,7 @@ func (ingester *Context) ProcessServiceDir(dir string) {
 
 	for _, api := range apis.Apis {
 		sms := fileRE.FindStringSubmatch(api.Path)
-		file := string(sms[0])
+		file := string(sms[1])
 
 		ingester.ingestApifromPath(file, filepath.Join(dir, file+".json"))
 	}

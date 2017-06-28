@@ -3,5 +3,9 @@ package {{.BasePackageName}}
 import "{{.PackageImportName}}/dtos"
 
 {{range .Methods}}
-  {{template "method" .}}
+  {{- if .Valid -}}
+    {{template "method" .}}
+  {{- else -}}
+    // {{.Name}}
+  {{- end -}}
 {{end}}

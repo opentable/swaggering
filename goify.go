@@ -43,6 +43,14 @@ func (c *Collection) findGoType(context *Context) (TypeStringer, error) {
 	}
 	return findGoType(context, &c.SwaggerType)
 }
+
+func (op *Operation) findGoType(context *Context) (TypeStringer, error) {
+	if op.Type == "" {
+		op.Type = "array"
+	}
+	return op.Collection.findGoType(context)
+}
+
 func isAggregate(kind string) bool {
 	return mapRE.FindStringSubmatch(kind) != nil || listRE.FindStringSubmatch(kind) != nil
 }
