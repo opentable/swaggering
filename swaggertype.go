@@ -28,9 +28,10 @@ type (
 
 	// Model represents a Swagger model
 	Model struct {
+		resolved bool
+
 		Id, Description, Discriminator string
 		GoPackage, GoName              string
-		GoUses                         bool
 		Required, SubTypes             []string
 		Properties                     map[string]*Property
 		Enums                          []Enum

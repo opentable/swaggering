@@ -62,30 +62,29 @@ func findGoType(context *Context, from *SwaggerType) (TypeStringer, error) {
 }
 
 func refType(context *Context, typeDesc *SwaggerType) (TypeStringer, error) {
-	t, err := aggregateType(context, typeDesc)
+	t, err := aggregateType(context, typeDesc.Ref)
 	if err != nil {
 		return context.modelFor(typeDesc.Ref)
 	}
 	return t, err
 }
 
-func aggregateItemType(context *Context, typeDesc *SwaggerType) (TypeStringer, error) {
-	t, err := aggregateType(context, typeDesc)
+func aggregateItemType(context *Context, typeStr string) (TypeStringer, error) {
+	t, err := aggregateType(context, typeStr)
 	if err != nil {
-		return goPrimitiveOrModel(context, typeDesc.Type)
+		return goPrimitiveOrModel(context, typeStr)
 	}
 	return t, err
 }
 
-func aggregateType(context *Context, typeDesc *SwaggerType) (TypeStringer, error) {
-	if matches := mapRE.FindStringSubmatch(typeDesc.Type); matches != nil {
+func aggregateType(context *Context, typeStr string) (TypeStringer, error) {
+	if matches := mapRE.FindStringSubmatch(typeStr); matches != nil {
 		keys, err := goPrimitiveType(matches[1])
 		if err != nil {
 			return nil, err
 		}
 
-		itemSwagger := &SwaggerType{Type: matches[2]}
-		values, err := aggregateItemType(context, itemSwagger)
+		values, err := aggregateItemType(context, matches[2])
 		if err != nil {
 			return nil, err
 		}
@@ -97,8 +96,8 @@ func aggregateType(context *Context, typeDesc *SwaggerType) (TypeStringer, error
 
 	}
 
-	if matches := listRE.FindStringSubmatch(typeDesc.Type); matches != nil {
-		values, err := goPrimitiveOrModel(context, matches[1])
+	if matches := listRE.FindStringSubmatch(typeStr); matches != nil {
+		values, err := aggregateItemType(context, matches[1])
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +105,7 @@ func aggregateType(context *Context, typeDesc *SwaggerType) (TypeStringer, error
 		return &SliceType{items: values}, nil
 	}
 
-	return nil, fmt.Errorf("Not recognized as an aggregate type: %s", typeDesc)
+	return nil, fmt.Errorf("Not recognized as an aggregate type: %s", typeStr)
 }
 
 func goPrimitiveOrModel(context *Context, name string) (TypeStringer, error) {

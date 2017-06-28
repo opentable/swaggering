@@ -99,7 +99,7 @@ func (t *PrimitiveType) TypeString() string {
 
 // TypeString implements TypeStringer on PrimitiveType.
 func (t *EnumType) TypeString() string {
-	return t.Name
+	return t.HostModel + t.Name
 }
 
 // TypeString implements TypeStringer on MapType.
@@ -138,7 +138,10 @@ func (t *Struct) TypeString() string {
 */
 // TypeString implements TypeStringer on SliceType.
 func (t *SliceType) TypeString() string {
-	if isPrimitive(t.items) {
+	if st, is := t.items.(*PrimitiveType); is {
+		if st.Name == "string" {
+			return "swaggering.StringList" // g-d only knows why
+		}
 		return fmt.Sprintf("[]%s", t.items.TypeString())
 	}
 	return fmt.Sprintf("%sList", t.items.TypeString())

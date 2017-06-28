@@ -1,6 +1,7 @@
 package swaggering
 
 import (
+	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,6 +9,8 @@ import (
 )
 
 func TestResolveModel(t *testing.T) {
+	log.SetFlags(log.Flags() | log.Lshortfile)
+
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -25,18 +28,27 @@ func TestResolveModel(t *testing.T) {
 	testStr.Items.Type = "string"
 	mod.Properties["testStr"] = &testStr
 
-	ctx := Context{}
+	swg := Swagger{
+		Models: map[string]*Model{
+			"TestModel": &mod,
+		},
+	}
+
+	ctx := Context{
+		swaggers:   []*Swagger{&swg},
+		openModels: []*Model{&mod},
+	}
 	//ctx.models = append(ctx.models, &mod)
 
 	strct := ctx.resolveModel(&mod)
 
-	testArray := strct.findField("test")
-	testString := strct.findField("testStr")
+	testArray := strct.findField("Test")
+	testString := strct.findField("TestStr")
 
 	require.NotNil(testArray)
 	require.NotNil(testString)
 
-	assert.Equal("TestModelList", testArray.Type.TypeString())
+	assert.Equal("*dtos.TestModelList", testArray.Type.TypeString())
 	assert.Equal("swaggering.StringList", testString.Type.TypeString())
 }
 
@@ -84,7 +96,7 @@ func TestResolveProperty_ListOfModels(t *testing.T) {
 
 	prop, err := ctx.resolveProperty("test", &mapStrStr)
 	if assert.NoError(err) {
-		assert.Equal("ThingList", prop.Type.TypeString())
+		assert.Equal("dtos.ThingList", prop.Type.TypeString())
 	}
 }
 
@@ -114,12 +126,12 @@ func TestResolveProperty_Enum(t *testing.T) {
 
 	strct := ctx.resolveModel(&mod)
 
-	f := strct.findField("enummy")
+	f := strct.findField("Enummy")
 	if assert.NotNil(f) {
 		//assert.Equal(false, enum.GoTypeInvalid)
 		assert.Equal("ThingEnumKind", f.Type.TypeString())
 	}
 
 	assert.Equal(1, len(strct.Enums))
-	assert.Equal("ThingEnumKind", strct.Enums[0].Name)
+	assert.Equal("ThingEnumKind", strct.Enums[0].TypeString())
 }

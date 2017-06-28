@@ -131,9 +131,9 @@ func (context *Context) modelFor(typeName string) (TypeStringer, error) {
 
 func (context *Context) modelUsed(name string) (TypeStringer, error) {
 	for _, swagger := range context.swaggers {
-		for _, model := range swagger.Models {
+		for _, model := range swagger.Models { // XXX it's a map - simply use Models[name] ?
 			if model.Id == name {
-				if !model.GoUses {
+				if !model.resolved {
 					context.openModels = append(context.openModels, model)
 				}
 
@@ -163,7 +163,7 @@ func (context *Context) resolveModels() {
 
 	for len(context.openModels) > 0 {
 		cur, context.openModels = context.openModels[0], context.openModels[1:]
-		if cur.GoUses {
+		if cur.resolved {
 			continue
 		}
 		context.resolveModel(cur)
@@ -171,18 +171,19 @@ func (context *Context) resolveModels() {
 }
 
 func (context *Context) resolveModel(model *Model) *Struct {
-	model.GoUses = true
+	model.resolved = true
 
 	s, err := context.getStruct(model.Id)
-	logErr(err, "when getting struct by name: %q", model.Id)
+	logErr(err, "when getting struct by name: %q: %v", model.Id)
 
 	for name, prop := range model.Properties {
 		field, err := context.resolveProperty(name, prop)
-		logErr(err, "when resolving property type")
+		logErr(err, "when resolving property type: %v")
 
 		if field == nil {
 			continue
 		}
+		s.Fields = append(s.Fields, field)
 
 		switch enum := field.Type.(type) {
 		case nil:
@@ -190,7 +191,7 @@ func (context *Context) resolveModel(model *Model) *Struct {
 			enum.HostModel = model.Id
 
 			exists := false
-			for _, e := range model.Enums {
+			for _, e := range s.Enums {
 				if e.Name == enum.Name {
 					exists = true
 					break
