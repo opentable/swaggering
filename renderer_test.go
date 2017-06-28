@@ -34,11 +34,15 @@ func TestRenderModel(t *testing.T) {
 
 	m := &Struct{}
 	m.Name = "TestModel"
-	m.Fields = append(m.Fields,
-		&Field{
-			Name: "test",
-			Type: &PrimitiveType{Name: "string"},
-		})
+	m.Fields = []*Attribute{
+		{
+			SwaggerName: "test",
+			Field: &Field{
+				Name:         "Test",
+				TypeStringer: &PrimitiveType{Name: "string"},
+			},
+		},
+	}
 
 	bytes, err := r.renderStruct("testing", m)
 	if !assert.NoError(err) {
@@ -46,18 +50,66 @@ func TestRenderModel(t *testing.T) {
 	}
 }
 
-func TestRenderApi(t *testing.T) {
+func TestRenderCodefile(t *testing.T) {
 	assert := assert.New(t)
 	r := NewRenderer("/tmp")
 
 	a := &CodeFile{}
 	a.BasePackageName = "test"
-	a.Methods = append(a.Methods, &Method{
-		Name:    "DtoOp",
-		Method:  "GET",
-		Path:    "/dto-op",
-		HasBody: false,
-	})
+	a.Methods = []*Method{
+		{
+			Name:    "DtoOp",
+			Method:  "GET",
+			Path:    "/dto-op",
+			HasBody: false,
+		},
+		{
+			Name:   "HasResult",
+			Method: "GET",
+			Path:   "/dto-op",
+			Results: []*Field{
+				{
+					Name: "response",
+					TypeStringer: &Pointer{to: &Struct{
+						Package: "dtos",
+						Name:    "ResponseThing",
+					}},
+				},
+			},
+			HasBody: false,
+		},
+		{
+			Name:   "HasBody",
+			Method: "PUT",
+			Path:   "/dto-op",
+			Params: []*Param{
+				{
+					ParamType: "path",
+					Field: &Field{
+						Name:         "pathparm",
+						TypeStringer: &PrimitiveType{Name: "string"},
+					},
+				},
+				{
+					ParamType: "query",
+					Field: &Field{
+						Name:         "dto",
+						TypeStringer: &PrimitiveType{Name: "int64"},
+					},
+				},
+				{
+					ParamType: "body",
+					Field: &Field{
+						Name: "dto",
+						TypeStringer: &Pointer{to: &Struct{
+							Package: "dtos",
+							Name:    "BodyThing",
+						}},
+					},
+				},
+			},
+		},
+	}
 
 	bytes, err := r.renderCodeFile("testing", a)
 	writeErrfile("/tmp/swaggering-test/brknApi.go", bytes)

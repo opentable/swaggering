@@ -18,18 +18,28 @@ import (
 
 // Renderer is responsible for actually turning the parsed API into go code
 type Renderer struct {
-	targetDir          string
-	modelTmpl, apiTmpl *template.Template
+	targetDir string
+	//modelTmpl, apiTmpl *template.Template
+	structTmpl, codefileTmpl *template.Template
 }
 
 // NewRenderer creates a new renderer
 func NewRenderer(tgt string) *Renderer {
 	renderer := &Renderer{targetDir: tgt}
-	renderer.apiTmpl = template.Must(templatestore.LoadText(Templates, "api", "api.tmpl"))
-	opT := template.Must(templatestore.LoadTextOnto(Templates, renderer.apiTmpl, "operation", "operation.tmpl"))
-	template.Must(templatestore.LoadTextOnto(Templates, opT, "type", "type.tmpl"))
 
-	renderer.modelTmpl = template.Must(templatestore.LoadText(Templates, "model", "model.tmpl"))
+	renderer.codefileTmpl = template.Must(templatestore.LoadText(Templates, "codefile", "codefile.tmpl"))
+	template.Must(templatestore.LoadTextOnto(Templates, renderer.codefileTmpl, "method", "method.tmpl"))
+	//template.Must(templatestore.LoadTextOnto(Templates, opT, "type", "type.tmpl"))
+
+	renderer.structTmpl = template.Must(templatestore.LoadText(Templates, "struct", "struct.tmpl"))
+
+	/*
+		renderer.apiTmpl = template.Must(templatestore.LoadText(Templates, "api", "api.tmpl"))
+		opT := template.Must(templatestore.LoadTextOnto(Templates, renderer.apiTmpl, "operation", "operation.tmpl"))
+		template.Must(templatestore.LoadTextOnto(Templates, opT, "type", "type.tmpl"))
+
+		renderer.modelTmpl = template.Must(templatestore.LoadText(Templates, "model", "model.tmpl"))
+	*/
 
 	return renderer
 }
@@ -94,11 +104,11 @@ func (r *Renderer) fullpath(path string) string {
 }
 
 func (r *Renderer) renderStruct(fullpath string, strct *Struct) ([]byte, error) {
-	return renderCode(fullpath, r.modelTmpl, strct)
+	return renderCode(fullpath, r.structTmpl, strct)
 }
 
 func (r *Renderer) renderCodeFile(path string, cfile *CodeFile) ([]byte, error) {
-	return renderCode(path, r.apiTmpl, cfile)
+	return renderCode(path, r.codefileTmpl, cfile)
 }
 
 func renderCode(fullpath string, tmpl *template.Template, context interface{}) (fb []byte, err error) {

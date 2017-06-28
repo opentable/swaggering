@@ -50,7 +50,7 @@ type (
 	Struct struct {
 		invalidity
 		Package, Name string
-		Fields        []*Field
+		Fields        []*Attribute
 		Enums         []*EnumType
 	}
 	// Pointer describes a pointer.
@@ -71,7 +71,7 @@ type (
 	Method struct {
 		invalidity
 		Name                string
-		Params              []*Field
+		Params              []*Param
 		Results             []*Field
 		Method, Path        string
 		HasBody, DTORequest bool
@@ -80,7 +80,21 @@ type (
 	// Field describes a Go field that will be build from a swagger API.
 	Field struct {
 		Name string
-		Type TypeStringer
+		TypeStringer
+	}
+
+	// Param describes a parameter to a method.
+	Param struct {
+		*Field
+
+		ParamType string
+	}
+
+	// An Attribute is a field in a Swagger Struct, which includes information about JSON serialization.
+	Attribute struct {
+		*Field
+
+		SwaggerName string
 	}
 )
 
@@ -157,7 +171,7 @@ func isPrimitive(t TypeStringer) bool {
 	}
 }
 
-func (t *Struct) findField(name string) *Field {
+func (t *Struct) findField(name string) *Attribute {
 	for _, f := range t.Fields {
 		if f.Name == name {
 			return f
@@ -166,16 +180,40 @@ func (t *Struct) findField(name string) *Field {
 	return nil
 }
 
+// consider templatehelpers.go
+
 // MakesResult indicates that the result value for this operation should be
 // allocated in Go using make() as opposed to new()
 func (method *Method) MakesResult() bool {
 	if len(method.Results) == 0 {
 		return false
 	}
-	switch method.Results[0].Type.(type) {
+	switch method.Results[0].TypeStringer.(type) {
 	default:
 		return true
 	case *Pointer:
 		return false
+	}
+}
+
+// HasResult indicates that the Method wraps an API call that produces a result value.
+func (method *Method) HasResult() bool {
+	return len(method.Results) > 0
+}
+
+// ResultTypeString is a shortcut for returning the typestring of a result value.
+func (method *Method) ResultTypeString() string {
+	if !method.HasResult() {
+		return "NO RESULT STRING"
+	}
+	return method.Results[0].TypeString()
+}
+
+func (attr *Attribute) Omittable() bool {
+	switch t := attr.TypeStringer.(type) {
+	default:
+		return false
+	case *PrimitiveType:
+		return t.Name == "string"
 	}
 }

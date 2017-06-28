@@ -70,16 +70,18 @@ func (context *Context) resolveApis() {
 
 				if mtype != nil {
 					method.DTORequest = !isPrimitive(mtype)
-					method.Results = append(method.Results, &Field{Name: "response", Type: mtype})
+					method.Results = append(method.Results, &Field{Name: "response", TypeStringer: mtype})
 				}
 
 				for _, parm := range op.Parameters {
 					field := Field{Name: parm.Name}
-					method.Params = append(method.Params, &field)
+					prm := Param{Field: &field, ParamType: parm.ParamType}
+					method.Params = append(method.Params, &prm)
 
 					t, err := parm.findGoType(context)
 					logErr(err, "Operation %s invalid: parameter %s: %v", op.Nickname, parm.Name)
-					field.Type = t
+
+					field.TypeStringer = t
 
 					if !t.Valid() {
 						method.invalidity = true
@@ -178,9 +180,13 @@ func (context *Context) resolveModel(model *Model) *Struct {
 		if field == nil {
 			continue
 		}
-		s.Fields = append(s.Fields, field)
+		attr := Attribute{
+			Field:       field,
+			SwaggerName: prop.SwaggerName,
+		}
+		s.Fields = append(s.Fields, &attr)
 
-		switch enum := field.Type.(type) {
+		switch enum := field.TypeStringer.(type) {
 		case nil:
 		case *EnumType:
 			enum.HostModel = model.Id
@@ -207,5 +213,5 @@ func (context *Context) resolveProperty(name string, prop *Property) (*Field, er
 	if err != nil {
 		return nil, err
 	}
-	return &Field{Name: capitalize(name), Type: t}, nil
+	return &Field{Name: capitalize(name), TypeStringer: t}, nil
 }

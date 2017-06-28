@@ -1,13 +1,13 @@
-{{- if not .GoTypeInvalid -}}
-func (client *Client) {{.GoMethodName}}(
-{{- range .Parameters -}}
-{{.Name}} {{template "type" . -}}
+{{- if .Valid -}}
+func (client *Client) {{.Name}}(
+{{- range .Params -}}
+{{.Name}} {{.TypeString -}}
 , {{end -}}
-) ({{ if not (eq .GoBaseType "") -}}
-response {{template "type" . -}}
+) ({{ if .HasResult -}}
+response {{.ResultTypeString -}}
 , {{end}} err error) {
 	pathParamMap := map[string]interface{}{
-		{{range .Parameters -}}
+		{{range .Params -}}
 		{{if eq "path" .ParamType -}}
 		  "{{.Name}}": {{.Name}},
 	  {{- end }}
@@ -15,7 +15,7 @@ response {{template "type" . -}}
 	}
 
   queryParamMap := map[string]interface{}{
-		{{range .Parameters -}}
+		{{range .Params -}}
 		{{if eq "query" .ParamType -}}
 		  "{{.Name}}": {{.Name}},
 	  {{- end }}
@@ -24,26 +24,24 @@ response {{template "type" . -}}
 
 	{{if .DTORequest -}}
 	{{if .MakesResult}}
-    response = make({{- template "type" . -}}, 0)
+    response = make({{.ResultTypeString}}, 0)
 		err = client.DTORequest(&response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body
 		{{- end -}})
 	{{else}}
-    response = new({{.GoPackage}}
-    {{- if ne .GoPackage ""}}.{{end -}}
-    {{.GoBaseType}})
+    response = new({{.ResultTypeString}})
 		err = client.DTORequest(response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body
 		{{- end -}})
 	{{end}}
-	{{else if (eq .GoBaseType "")}}
+	{{else if not .HasResult}}
 	_, err = client.Request("{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 	{{- if .HasBody -}}
 	, body
   {{- end -}})
-	{{else if eq .GoBaseType "string"}}
+	{{else if eq .ResultTypeString "string"}}
 	resBody, err := client.Request("{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 	{{- if .HasBody -}}
 	, body

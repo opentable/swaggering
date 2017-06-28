@@ -2,6 +2,6 @@ package {{.BasePackageName}}
 
 import "{{.PackageImportName}}/dtos"
 
-{{range .Operations}}
-  {{template "operation" .}}
+{{range .Methods}}
+  {{template "method" .}}
 {{end}}

@@ -67,5 +67,5 @@ func TestMapStringString(t *testing.T) {
 	envField := dep.findField("Env")
 	require.NotNil(envField)
 
-	assert.Equal("map[string]string", envField.Type.TypeString())
+	assert.Equal("map[string]string", envField.TypeString())
 }
