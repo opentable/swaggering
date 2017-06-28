@@ -50,7 +50,7 @@ func TestGoifyMapToMap(t *testing.T) {
 	typ, err := findGoType(&ctx, &dt)
 	assert.NoError(t, err)
 	if assert.NotNil(t, typ) {
-		assert.Equal(t, `map[int]map[string]string`, typ.TypeString())
+		assert.Equal(t, `map[int64]map[string]string`, typ.TypeString())
 	}
 
 }

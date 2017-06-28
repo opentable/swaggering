@@ -127,7 +127,7 @@ func goPrimitiveFormattedType(sType, format string) (TypeStringer, error) {
 		return nil, fmt.Errorf("Unrecognized primitive type: %s", sType)
 	case "boolean":
 		t = "bool"
-	case "integer":
+	case "integer", "int":
 		switch format {
 		default:
 			t = "int64"
