@@ -5,7 +5,6 @@ import (
 	"log"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -236,8 +235,6 @@ func TestResolveModel_SingularityDockerInfo(t *testing.T) { // from Singularity
 
 	ctx := Context{}
 	strct := ctx.resolveModel(&mod)
-
-	spew.Dump(strct)
 
 	assert.True(t, strct.Valid())
 	assert.Equal(t, strct.Name, "SingularityDockerInfo")

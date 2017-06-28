@@ -55,8 +55,7 @@ type (
 	}
 	// Pointer describes a pointer.
 	Pointer struct {
-		alwaysValid
-		to TypeStringer
+		TypeStringer
 	}
 	/*
 		// GoType represents a datatype to be rendered as Go code.
@@ -123,7 +122,7 @@ func (t *MapType) TypeString() string {
 
 // TypeString implements TypeStringer on Pointer.
 func (t *Pointer) TypeString() string {
-	return fmt.Sprintf("*%s", t.to.TypeString())
+	return fmt.Sprintf("*%s", t.TypeStringer.TypeString())
 }
 
 // TypeString implements TypeStringer on Struct.

@@ -2,8 +2,6 @@ package swaggering
 
 import (
 	"fmt"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Context struct {
@@ -105,10 +103,9 @@ func (context *Context) resolveOperation(op *Operation) *Method {
 
 func (context *Context) modelFor(typeName string) (TypeStringer, error) {
 	t, err := context.modelUsed(typeName)
-	spew.Dump(err)
 	if err != nil {
 		return &Pointer{
-			to: &Struct{
+			&Struct{
 				invalidity: true,
 				Name:       typeName,
 				Package:    "notfound",
@@ -116,7 +113,7 @@ func (context *Context) modelFor(typeName string) (TypeStringer, error) {
 		}, err
 	}
 
-	return &Pointer{to: t}, nil
+	return &Pointer{t}, nil
 }
 
 func (context *Context) modelUsed(name string) (TypeStringer, error) {
@@ -167,9 +164,8 @@ func (context *Context) resolveModel(model *Model) *Struct {
 	logErr(err, "when getting struct by name: %q: %v", model.Id)
 
 	for name, prop := range model.Properties {
-		spew.Dump(name)
 		field, err := context.resolveProperty(name, prop)
-		logErr(err, "when resolving property type: %v")
+		logErr(err, "when resolving property type for %q: %v", model.Id)
 
 		if field == nil {
 			continue

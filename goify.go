@@ -86,6 +86,9 @@ func refType(context *Context, refStr string) (TypeStringer, error) {
 }
 
 func aggregateItemType(context *Context, typeStr string) (TypeStringer, error) {
+	if typeStr == "Object" {
+		return &PrimitiveType{Name: "interface{}"}, nil
+	}
 	t, err := aggregateType(context, typeStr)
 	if err != nil {
 		return goPrimitiveOrModel(context, typeStr)

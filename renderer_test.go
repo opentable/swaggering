@@ -70,7 +70,7 @@ func TestRenderCodefile(t *testing.T) {
 			Results: []*Field{
 				{
 					Name: "response",
-					TypeStringer: &Pointer{to: &Struct{
+					TypeStringer: &Pointer{&Struct{
 						Package: "dtos",
 						Name:    "ResponseThing",
 					}},
@@ -101,7 +101,7 @@ func TestRenderCodefile(t *testing.T) {
 					ParamType: "body",
 					Field: &Field{
 						Name: "dto",
-						TypeStringer: &Pointer{to: &Struct{
+						TypeStringer: &Pointer{&Struct{
 							Package: "dtos",
 							Name:    "BodyThing",
 						}},

@@ -54,3 +54,19 @@ func TestGoifyMapToMap(t *testing.T) {
 	}
 
 }
+
+func TestGoifyMapToObject(t *testing.T) {
+	dtJSON := `{
+		"$ref": "Map[string,Object]",
+		"description": "Map (Key/Value) of options for the load balancer."
+	}`
+
+	ctx := Context{}
+	dt := SwaggerType{}
+	json.Unmarshal([]byte(dtJSON), &dt)
+	typ, err := findGoType(&ctx, &dt)
+	if assert.NoError(t, err) && assert.NotNil(t, typ) {
+		assert.Equal(t, `map[string]interface{}`, typ.TypeString())
+	}
+
+}
