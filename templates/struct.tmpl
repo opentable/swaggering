@@ -21,7 +21,7 @@ type {{.Name}} struct {
   present map[string]bool
 {{range $name, $prop := .Fields}}
   {{if not $prop.Valid}}// Invalid field: {{end -}}
-    {{$prop.Name}} {{$prop.TypeString}} `json:"{{$prop.SwaggerName}}
+    {{$prop.Name}} {{$prop.TypeString "dtos"}} `json:"{{$prop.SwaggerName}}
   {{- if $prop.Omittable -}}
   ,omitempty
   {{- end -}}
@@ -68,14 +68,14 @@ func (self *{{.Name}}) SetField(name string, value interface{}) error {
     {{ if $prop.Valid }}
     case "{{$prop.SwaggerName}}", "{{$prop.Name}}":
     v, ok := value.(
-      {{- $prop.TypeString -}}
+      {{- $prop.TypeString "dtos" -}}
       )
       if ok {
         self.{{$prop.Name}} = v
         self.present["{{$prop.SwaggerName}}"] = true
         return nil
       } else {
-        return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.Name}}: value %v(%T) couldn't be cast to type {{$prop.TypeString}}", value, value)
+        return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.Name}}: value %v(%T) couldn't be cast to type {{$prop.TypeString "dtos"}}", value, value)
       }
     {{end}}
   {{end}}

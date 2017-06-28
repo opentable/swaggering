@@ -31,7 +31,7 @@ func TestStringGoify(t *testing.T) {
 		t.Fatalf("Error should be nil, was: %v", err)
 	}
 
-	if tf.TypeString() != "string" {
+	if tf.TypeString("") != "string" {
 		t.Fatalf("Formatted type should be 'string' was %v", t)
 	}
 }
@@ -50,7 +50,7 @@ func TestGoifyMapToMap(t *testing.T) {
 	typ, err := findGoType(&ctx, &dt)
 	assert.NoError(t, err)
 	if assert.NotNil(t, typ) {
-		assert.Equal(t, `map[int64]map[string]string`, typ.TypeString())
+		assert.Equal(t, `map[int64]map[string]string`, typ.TypeString(""))
 	}
 
 }
@@ -66,7 +66,7 @@ func TestGoifyMapToObject(t *testing.T) {
 	json.Unmarshal([]byte(dtJSON), &dt)
 	typ, err := findGoType(&ctx, &dt)
 	if assert.NoError(t, err) && assert.NotNil(t, typ) {
-		assert.Equal(t, `map[string]interface{}`, typ.TypeString())
+		assert.Equal(t, `map[string]interface{}`, typ.TypeString(""))
 	}
 
 }

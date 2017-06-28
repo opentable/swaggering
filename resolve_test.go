@@ -49,8 +49,9 @@ func TestResolveModel(t *testing.T) {
 	require.NotNil(testArray)
 	require.NotNil(testString)
 
-	assert.Equal("*dtos.TestModelList", testArray.TypeString())
-	assert.Equal("swaggering.StringList", testString.TypeString())
+	assert.Equal("*dtos.TestModelList", testArray.TypeString(""))
+	assert.Equal("*TestModelList", testArray.TypeString("dtos"))
+	assert.Equal("swaggering.StringList", testString.TypeString(""))
 }
 
 func TestResolveProperty_Maps(t *testing.T) {
@@ -62,7 +63,7 @@ func TestResolveProperty_Maps(t *testing.T) {
 
 	prop, err := ctx.resolveProperty("test", &mapStrStr)
 	if assert.NoError(err) {
-		assert.Equal("map[string]string", prop.TypeString())
+		assert.Equal("map[string]string", prop.TypeString(""))
 	}
 }
 
@@ -75,7 +76,7 @@ func TestResolveProperty_DeepMaps(t *testing.T) {
 
 	prop, err := ctx.resolveProperty("test", &m)
 	if assert.NoError(err) {
-		assert.Equal("map[string]map[string]string", prop.TypeString())
+		assert.Equal("map[string]map[string]string", prop.TypeString(""))
 	}
 }
 
@@ -97,7 +98,7 @@ func TestResolveProperty_ListOfModels(t *testing.T) {
 
 	prop, err := ctx.resolveProperty("test", &mapStrStr)
 	if assert.NoError(err) {
-		assert.Equal("dtos.ThingList", prop.TypeString())
+		assert.Equal("dtos.ThingList", prop.TypeString(""))
 	}
 }
 
@@ -130,11 +131,11 @@ func TestResolveProperty_Enum(t *testing.T) {
 	f := strct.findField("Enummy")
 	if assert.NotNil(f) {
 		//assert.Equal(false, enum.GoTypeInvalid)
-		assert.Equal("ThingEnumKind", f.TypeString())
+		assert.Equal("ThingEnumKind", f.TypeString(""))
 	}
 
 	assert.Equal(1, len(strct.Enums))
-	assert.Equal("ThingEnumKind", strct.Enums[0].TypeString())
+	assert.Equal("ThingEnumKind", strct.Enums[0].TypeString(""))
 }
 
 func TestResolveOperation_GetLBCleanup(t *testing.T) { // from Singularity
@@ -170,11 +171,11 @@ func TestResolveOperation_GetLBCleanup(t *testing.T) { // from Singularity
 	assert.False(t, method.HasBody)
 	assert.Equal(t, method.Method, "GET")
 	assert.Equal(t, method.Name, "GetLbCleanupRequests")
-	assert.Equal(t, method.ResultTypeString(), "swaggering.StringList")
+	assert.Equal(t, method.ResultTypeString(""), "swaggering.StringList")
 	assert.Len(t, method.Params, 1)
 	wc := method.Params[0]
 	assert.Equal(t, wc.Name, "useWebCache")
-	assert.Equal(t, wc.TypeString(), "bool")
+	assert.Equal(t, wc.TypeString(""), "bool")
 	assert.Equal(t, wc.ParamType, "query")
 }
 

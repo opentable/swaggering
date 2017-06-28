@@ -13,7 +13,7 @@ type (
 
 	// A TypeStringer implements TypeString, which returns the string that describes a go type.
 	TypeStringer interface {
-		TypeString() string
+		TypeString(pkg string) string
 		Valid() bool
 	}
 
@@ -106,28 +106,28 @@ func (v invalidity) Valid() bool {
 }
 
 // TypeString implements TypeStringer on PrimitiveType.
-func (t *PrimitiveType) TypeString() string {
+func (t *PrimitiveType) TypeString(pkg string) string {
 	return t.Name
 }
 
 // TypeString implements TypeStringer on PrimitiveType.
-func (t *EnumType) TypeString() string {
+func (t *EnumType) TypeString(pkg string) string {
 	return t.HostModel + t.Name
 }
 
 // TypeString implements TypeStringer on MapType.
-func (t *MapType) TypeString() string {
-	return fmt.Sprintf("map[%s]%s", t.keys.TypeString(), t.values.TypeString())
+func (t *MapType) TypeString(pkg string) string {
+	return fmt.Sprintf("map[%s]%s", t.keys.TypeString(pkg), t.values.TypeString(pkg))
 }
 
 // TypeString implements TypeStringer on Pointer.
-func (t *Pointer) TypeString() string {
-	return fmt.Sprintf("*%s", t.TypeStringer.TypeString())
+func (t *Pointer) TypeString(pkg string) string {
+	return fmt.Sprintf("*%s", t.TypeStringer.TypeString(pkg))
 }
 
 // TypeString implements TypeStringer on Struct.
-func (t *Struct) TypeString() string {
-	if t.Package == "" {
+func (t *Struct) TypeString(pkg string) string {
+	if t.Package == "" || t.Package == pkg {
 		return fmt.Sprintf("%s", t.Name)
 	}
 	return fmt.Sprintf("%s.%s", t.Package, t.Name)
@@ -150,14 +150,14 @@ func (t *Struct) TypeString() string {
 	}
 */
 // TypeString implements TypeStringer on SliceType.
-func (t *SliceType) TypeString() string {
+func (t *SliceType) TypeString(pkg string) string {
 	if st, is := t.items.(*PrimitiveType); is {
 		if st.Name == "string" {
 			return "swaggering.StringList" // g-d only knows why
 		}
-		return fmt.Sprintf("[]%s", t.items.TypeString())
+		return fmt.Sprintf("[]%s", t.items.TypeString(pkg))
 	}
-	return fmt.Sprintf("%sList", t.items.TypeString())
+	return fmt.Sprintf("%sList", t.items.TypeString(pkg))
 }
 
 // IsPrimitive implements TypeStringer on PrimitiveType.
@@ -201,11 +201,11 @@ func (method *Method) HasResult() bool {
 }
 
 // ResultTypeString is a shortcut for returning the typestring of a result value.
-func (method *Method) ResultTypeString() string {
+func (method *Method) ResultTypeString(pkg string) string {
 	if !method.HasResult() {
 		return "NO RESULT STRING"
 	}
-	return method.Results[0].TypeString()
+	return method.Results[0].TypeString(pkg)
 }
 
 func (attr *Attribute) Omittable() bool {

@@ -1,9 +1,9 @@
 func (client *Client) {{.Name}}(
 {{- range .Params -}}
-{{.Name}} {{.TypeString -}}
+{{.Name}} {{.TypeString "" -}}
 , {{end -}}
 ) ({{ if .HasResult -}}
-response {{.ResultTypeString -}}
+response {{.ResultTypeString "" -}}
 , {{end}} err error) {
 	pathParamMap := map[string]interface{}{
 		{{range .Params -}}
@@ -23,13 +23,13 @@ response {{.ResultTypeString -}}
 
 	{{if .DTORequest -}}
 	{{if .MakesResult}}
-    response = make({{.ResultTypeString}}, 0)
+    response = make({{.ResultTypeString ""}}, 0)
 		err = client.DTORequest(&response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body
 		{{- end -}})
 	{{else}}
-    response = new({{.ResultTypeString}})
+    response = new({{.ResultTypeString ""}})
 		err = client.DTORequest(response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body
@@ -40,7 +40,7 @@ response {{.ResultTypeString -}}
 	{{- if .HasBody -}}
 	, body
   {{- end -}})
-	{{else if eq .ResultTypeString "string"}}
+	{{else if eq (.ResultTypeString "") "string"}}
 	resBody, err := client.Request("{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 	{{- if .HasBody -}}
 	, body
