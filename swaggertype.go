@@ -55,7 +55,6 @@ type (
 	// Property represents a field in a swagger model
 	Property struct {
 		Collection
-		SwaggerName string
 	}
 
 	// Parameter is a deserialization target for Swagger JSON files.

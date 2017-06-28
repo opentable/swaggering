@@ -2,7 +2,8 @@ package swaggering
 
 import (
 	"fmt"
-	"log"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Context struct {
@@ -71,7 +72,6 @@ func (context *Context) resolveOperation(op *Operation) *Method {
 	method.Method = op.Method
 
 	mtype, err := op.findGoType(context)
-	//context.responseType(op)
 	if err != nil {
 		logErr(err, "Operation %s invalid: %v", op.Nickname)
 		method.invalidity = true
@@ -103,31 +103,17 @@ func (context *Context) resolveOperation(op *Operation) *Method {
 	return &method
 }
 
-func (context *Context) responseType(op *Operation) (TypeStringer, error) {
-	var rms string
-	for _, rm := range op.ResponseMessages {
-		if rm.ResponseModel != "" {
-			if rms != "" {
-				log.Printf("Operation %q has multiple response models - using %q, (not %q) but probably swaggering needs to be extended.",
-					op.Nickname, rms, rm.ResponseModel)
-				continue
-			}
-			rms = rm.ResponseModel
-		}
-	}
-
-	if rms != "" {
-		rmst := SwaggerType{Ref: rms}
-		return findGoType(context, &rmst)
-	}
-
-	return nil, nil
-}
-
 func (context *Context) modelFor(typeName string) (TypeStringer, error) {
 	t, err := context.modelUsed(typeName)
+	spew.Dump(err)
 	if err != nil {
-		return nil, err
+		return &Pointer{
+			to: &Struct{
+				invalidity: true,
+				Name:       typeName,
+				Package:    "notfound",
+			},
+		}, err
 	}
 
 	return &Pointer{to: t}, nil
@@ -181,6 +167,7 @@ func (context *Context) resolveModel(model *Model) *Struct {
 	logErr(err, "when getting struct by name: %q: %v", model.Id)
 
 	for name, prop := range model.Properties {
+		spew.Dump(name)
 		field, err := context.resolveProperty(name, prop)
 		logErr(err, "when resolving property type: %v")
 
@@ -189,7 +176,7 @@ func (context *Context) resolveModel(model *Model) *Struct {
 		}
 		attr := Attribute{
 			Field:       field,
-			SwaggerName: prop.SwaggerName,
+			SwaggerName: name,
 		}
 		s.Fields = append(s.Fields, &attr)
 
@@ -217,8 +204,5 @@ func (context *Context) resolveModel(model *Model) *Struct {
 
 func (context *Context) resolveProperty(name string, prop *Property) (*Field, error) {
 	t, err := prop.findGoType(context) //uses embedded Collection's impl
-	if err != nil {
-		return nil, err
-	}
-	return &Field{Name: capitalize(name), TypeStringer: t}, nil
+	return &Field{Name: capitalize(name), TypeStringer: t}, err
 }

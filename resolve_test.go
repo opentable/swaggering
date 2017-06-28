@@ -178,3 +178,71 @@ func TestResolveOperation_GetLBCleanup(t *testing.T) { // from Singularity
 	assert.Equal(t, wc.TypeString(), "bool")
 	assert.Equal(t, wc.ParamType, "query")
 }
+
+func TestResolveModel_SingularityDockerInfo(t *testing.T) { // from Singularity
+	sdiJSON := `
+	{
+		"id": "SingularityDockerInfo",
+		"required": [
+			"image",
+			"privileged"
+		],
+		"properties": {
+			"image": {
+				"type": "string",
+				"description": "Docker image name"
+			},
+			"privileged": {
+				"type": "boolean",
+				"description": "Controls use of the docker --privleged flag"
+			},
+			"network": {
+				"$ref": "SingularityDockerNetworkType",
+				"description": "Docker netowkr type. Value can be BRIDGE, HOST, or NONE",
+				"enum": [
+					"HOST",
+					"BRIDGE",
+					"NONE"
+				]
+			},
+			"portMappings": {
+				"type": "array",
+				"description": "List of port mappings",
+				"items": {
+					"$ref": "SingularityDockerPortMapping"
+				}
+			},
+			"forcePullImage": {
+				"type": "boolean",
+				"description": "Always run docker pull even if the image already exists locally"
+			},
+			"parameters": {
+				"$ref": "Map[string,string]"
+			},
+			"dockerParameters": {
+				"type": "array",
+				"description": "Other docker run command line options to be set",
+				"items": {
+					"$ref": "SingularityDockerParameter"
+				}
+			}
+		}
+	}
+	`
+
+	mod := Model{}
+	err := json.Unmarshal([]byte(sdiJSON), &mod)
+	assert.NoError(t, err)
+
+	ctx := Context{}
+	strct := ctx.resolveModel(&mod)
+
+	spew.Dump(strct)
+
+	assert.True(t, strct.Valid())
+	assert.Equal(t, strct.Name, "SingularityDockerInfo")
+	assert.Equal(t, strct.Package, "dtos")
+	assert.Len(t, strct.Fields, 7)
+	assert.Len(t, strct.Enums, 1)
+
+}
