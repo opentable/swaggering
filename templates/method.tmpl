@@ -1,4 +1,3 @@
-{{- if .Valid -}}
 func (client *Client) {{.Name}}(
 {{- range .Params -}}
 {{.Name}} {{.TypeString -}}
@@ -52,4 +51,3 @@ response {{.ResultTypeString -}}
 	{{- end}}
 	return
 }
-{{end}}

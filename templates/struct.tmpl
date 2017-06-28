@@ -21,7 +21,7 @@ type {{.Name}} struct {
   present map[string]bool
 {{range $name, $prop := .Fields}}
   {{if not $prop.Valid}}// {{end -}}
-    {{$prop.TypeString}} `json:"{{$prop.SwaggerName}}
+    {{$prop.Name}} {{$prop.TypeString}} `json:"{{$prop.SwaggerName}}
   {{- if $prop.Omittable -}}
   ,omitempty
   {{- end -}}

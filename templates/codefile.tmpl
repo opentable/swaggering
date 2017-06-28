@@ -6,6 +6,6 @@ import "{{.PackageImportName}}/dtos"
   {{- if .Valid -}}
     {{template "method" .}}
   {{- else -}}
-    // {{.Name}}
-  {{- end -}}
+    // {{.Name}} is invalid
+  {{ end -}}
 {{end}}
