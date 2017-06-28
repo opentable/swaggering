@@ -50,21 +50,29 @@ func isAggregate(kind string) bool {
 func findGoType(context *Context, from *SwaggerType) (TypeStringer, error) {
 	switch {
 	default:
-		return goPrimitiveFormattedType(from.Type, from.Format)
+		return primitiveOrRefType(context, from)
 	case len(from.Enum) > 0:
 		return &EnumType{
 			Name:   from.Ref,
 			Values: from.Enum,
 		}, nil
 	case from.Type == "":
-		return refType(context, from)
+		return refType(context, from.Ref)
 	}
 }
 
-func refType(context *Context, typeDesc *SwaggerType) (TypeStringer, error) {
-	t, err := aggregateType(context, typeDesc.Ref)
+func primitiveOrRefType(context *Context, from *SwaggerType) (TypeStringer, error) {
+	t, err := goPrimitiveFormattedType(from.Type, from.Format)
 	if err != nil {
-		return context.modelFor(typeDesc.Ref)
+		return refType(context, from.Type)
+	}
+	return t, nil
+}
+
+func refType(context *Context, refStr string) (TypeStringer, error) {
+	t, err := aggregateType(context, refStr)
+	if err != nil {
+		return context.modelFor(refStr)
 	}
 	return t, err
 }

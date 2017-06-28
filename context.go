@@ -61,7 +61,8 @@ func (context *Context) resolveApis() {
 				method.Path = api.Path
 				method.Name = capitalize(op.Nickname)
 
-				mtype, err := context.responseType(op)
+				mtype, err := op.findGoType(context)
+				//context.responseType(op)
 				if err != nil {
 					logErr(err, "Operation %s invalid: %v", op.Nickname)
 					method.invalidity = true
@@ -121,12 +122,6 @@ func (context *Context) modelFor(typeName string) (TypeStringer, error) {
 	}
 
 	return &Pointer{to: t}, nil
-	/*
-		to.GoModel = true
-		to.GoPackage = "dtos"
-		to.GoTypePrefix = "*"
-		to.setGoType(typeName, err)
-	*/
 }
 
 func (context *Context) modelUsed(name string) (TypeStringer, error) {

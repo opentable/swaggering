@@ -17,15 +17,6 @@ type (
 		Operations        []*Operation
 	}
 
-	// Operation represents an operation on an API in swagger
-	Operation struct {
-		Nickname, Method, Path, Deprecated string
-		HasBody, DTORequest                bool
-		Parameters                         []*Parameter
-		ResponseMessages                   []*ResponseMessage
-		Collection
-	}
-
 	// Model represents a Swagger model
 	Model struct {
 		resolved bool
@@ -49,6 +40,16 @@ type (
 		SwaggerType
 		Items       SwaggerType
 		UniqueItems bool
+	}
+
+	// Operation represents an operation on an API in swagger
+	Operation struct {
+		Collection
+
+		Nickname, Method, Path, Deprecated string
+		HasBody, DTORequest                bool
+		Parameters                         []*Parameter
+		ResponseMessages                   []*ResponseMessage
 	}
 
 	// Property represents a field in a swagger model

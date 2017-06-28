@@ -64,13 +64,7 @@ func TestMapStringString(t *testing.T) {
 
 	require.Contains(ctx.structs, "SingularityDeploy")
 	dep := ctx.structs["SingularityDeploy"]
-	var envField *Field
-	for _, f := range dep.Fields {
-		if f.Name == "env" {
-			envField = f
-			break
-		}
-	}
+	envField := dep.findField("Env")
 	require.NotNil(envField)
 
 	assert.Equal("map[string]string", envField.Type.TypeString())
