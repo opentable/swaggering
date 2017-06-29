@@ -23,13 +23,13 @@ response {{.ResultTypeString "" -}}
 
 	{{if .DTORequest -}}
 	{{if .MakesResult}}
-    response = make({{.ResultTypeString ""}}, 0)
+    response = make({{.BaseResultTypeString ""}}, 0)
 		err = client.DTORequest(&response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body
 		{{- end -}})
 	{{else}}
-    response = new({{.ResultTypeString ""}})
+    response = new({{.BaseResultTypeString ""}})
 		err = client.DTORequest(response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body

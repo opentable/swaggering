@@ -49,8 +49,8 @@ func TestResolveModel(t *testing.T) {
 	require.NotNil(testArray)
 	require.NotNil(testString)
 
-	assert.Equal("*dtos.TestModelList", testArray.TypeString(""))
-	assert.Equal("*TestModelList", testArray.TypeString("dtos"))
+	assert.Equal("dtos.TestModelList", testArray.TypeString(""))
+	assert.Equal("TestModelList", testArray.TypeString("dtos"))
 	assert.Equal("swaggering.StringList", testString.TypeString(""))
 }
 
@@ -136,6 +136,36 @@ func TestResolveProperty_Enum(t *testing.T) {
 
 	assert.Equal(1, len(strct.Enums))
 	assert.Equal("ThingEnumKind", strct.Enums[0].TypeString(""))
+}
+
+func TestResolveOperation_GetPendingDeploys(t *testing.T) { // from Singularity
+	glbcJSON := `
+		{
+			"method": "GET",
+			"summary": "Retrieve the list of current pending deploys",
+			"notes": "",
+			"type": "array",
+			"items": {
+				"$ref": "SingularityPendingDeploy"
+			},
+			"nickname": "getPendingDeploys",
+			"parameters": []
+		} `
+
+	op := Operation{}
+	json.Unmarshal([]byte(glbcJSON), &op)
+
+	mod := Model{}
+	mod.Id = "SingularityPendingDeploy"
+	mod.Properties = make(map[string]*Property)
+
+	swagger := Swagger{Models: map[string]*Model{"SingularityPendingDeploy": &mod}}
+
+	ctx := Context{swaggers: []*Swagger{&swagger}}
+	method := ctx.resolveOperation(&op)
+
+	assert.True(t, method.HasResult())
+	assert.Equal(t, "dtos.SingularityPendingDeployList", method.ResultTypeString(""))
 }
 
 func TestResolveOperation_GetLBCleanup(t *testing.T) { // from Singularity

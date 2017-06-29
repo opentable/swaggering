@@ -1,6 +1,8 @@
 package swaggering
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type (
 	// CodeFile describes a go code file, which will contain methods
@@ -206,6 +208,15 @@ func (method *Method) ResultTypeString(pkg string) string {
 		return "NO RESULT STRING"
 	}
 	return method.Results[0].TypeString(pkg)
+}
+
+func (method *Method) BaseResultTypeString(pkg string) string {
+	switch res := method.Results[0].TypeStringer.(type) {
+	default:
+		return res.TypeString(pkg)
+	case *Pointer:
+		return res.TypeStringer.TypeString(pkg)
+	}
 }
 
 func (attr *Attribute) Omittable() bool {

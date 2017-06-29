@@ -8,11 +8,11 @@ import (
 )
 
 {{range $enum := .Enums}}
-type {{$enum.Name}} string
+type {{$enum.TypeString "dtos"}} string
 
 const (
   {{- range $value := $enum.Values}}
-  {{$enum.Name}}{{$value}} {{$enum.Name}} = "{{$value}}"
+  {{$enum.TypeString "dtos"}}{{$value}} {{$enum.TypeString "dtos"}} = "{{$value}}"
   {{- end}}
 )
 {{end}}

@@ -39,7 +39,12 @@ func (c *Collection) findGoType(context *Context) (TypeStringer, error) {
 			return nil, err
 		}
 
-		return &SliceType{items: t}, nil
+		switch item := t.(type) {
+		default:
+			return &SliceType{items: item}, nil
+		case *Pointer:
+			return &SliceType{items: item.TypeStringer}, nil
+		}
 	}
 	return findGoType(context, &c.SwaggerType)
 }
