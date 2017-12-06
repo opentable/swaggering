@@ -20,10 +20,10 @@ type (
 	// make actual HTTP requests of the API server
 	Requester interface {
 		// DTORequest performs an HTTP request and populates a DTO based on the response
-		DTORequest(dto DTO, method, path string, pathParams, queryParams urlParams, body ...DTO) error
+		DTORequest(resourceName string, dto DTO, method, path string, pathParams, queryParams urlParams, body ...DTO) error
 
 		// Request performs an HTTP request and returns the body of the response
-		Request(method, path string, pathParams, queryParams urlParams, body ...DTO) (io.ReadCloser, error)
+		Request(resourceName string, method string, path string, pathParams urlParams, queryParams urlParams, body ...DTO) (io.ReadCloser, error)
 	}
 
 	// GenericClient is a generic client for Swagger described services

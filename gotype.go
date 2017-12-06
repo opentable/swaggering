@@ -2,6 +2,7 @@ package swaggering
 
 import (
 	"fmt"
+	"strings"
 )
 
 type (
@@ -71,6 +72,7 @@ type (
 	// Method describes the Go method that will be build from a swagger API.
 	Method struct {
 		invalidity
+		hostPackage         string
 		Name                string
 		Params              []*Param
 		Results             []*Field
@@ -217,6 +219,10 @@ func (method *Method) BaseResultTypeString(pkg string) string {
 	case *Pointer:
 		return res.TypeStringer.TypeString(pkg)
 	}
+}
+
+func (method Method) ResourceName() string {
+	return method.hostPackage + "-" + strings.ToLower(method.Name)
 }
 
 func (attr *Attribute) Omittable() bool {

@@ -24,24 +24,24 @@ response {{.ResultTypeString "" -}}
 	{{if .DTORequest -}}
 	{{if .MakesResult}}
     response = make({{.BaseResultTypeString ""}}, 0)
-		err = client.DTORequest(&response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
+		err = client.DTORequest("{{.ResourceName}}", &response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body
 		{{- end -}})
 	{{else}}
     response = new({{.BaseResultTypeString ""}})
-		err = client.DTORequest(response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
+		err = client.DTORequest("{{.ResourceName}}", response, "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 		{{- if .HasBody -}}
 		, body
 		{{- end -}})
 	{{end}}
 	{{else if not .HasResult}}
-	_, err = client.Request("{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
+	_, err = client.Request("{{.ResourceName}}", "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 	{{- if .HasBody -}}
 	, body
   {{- end -}})
 	{{else if eq (.ResultTypeString "") "string"}}
-	resBody, err := client.Request("{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
+	resBody, err := client.Request("{{.ResourceName}}", "{{.Method}}", "{{.Path}}", pathParamMap, queryParamMap
 	{{- if .HasBody -}}
 	, body
   {{- end -}})

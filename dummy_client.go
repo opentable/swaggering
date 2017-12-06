@@ -96,7 +96,7 @@ func (c DummyControl) FeedSimple(body string, err error) {
 }
 
 // DTORequest performs an HTTP request and populates a DTO based on the response
-func (dc *DummyClient) DTORequest(pop DTO, m, p string, pp, qp urlParams, b ...DTO) error {
+func (dc *DummyClient) DTORequest(rn string, pop DTO, m, p string, pp, qp urlParams, b ...DTO) error {
 	dto, err := dc.NextDTO(m, p, pp, qp, b...)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func (dc *DummyClient) DTORequest(pop DTO, m, p string, pp, qp urlParams, b ...D
 }
 
 // Request performs an HTTP request and returns the body of the response
-func (dc *DummyClient) Request(m, p string, pp, qp urlParams, b ...DTO) (io.ReadCloser, error) {
+func (dc *DummyClient) Request(rn, m, p string, pp, qp urlParams, b ...DTO) (io.ReadCloser, error) {
 	body, err := dc.NextSimple(m, p, pp, qp, b...)
 	if err != nil {
 		return nil, err
