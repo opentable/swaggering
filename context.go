@@ -64,7 +64,7 @@ func (context *Context) resolveApis() {
 }
 
 func (context *Context) resolveOperation(op *Operation) *Method {
-	method := Method{}
+	method := Method{hostPackage: context.packageName}
 
 	method.Name = capitalize(op.Nickname)
 	method.Method = op.Method

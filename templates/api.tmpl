@@ -1,7 +1,0 @@
-package {{.BasePackageName}}
-
-import "{{.PackageImportName}}/dtos"
-
-{{range .Operations}}
-  {{template "operation" .}}
-{{end}}
