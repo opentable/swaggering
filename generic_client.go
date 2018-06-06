@@ -102,8 +102,9 @@ func (gc *GenericClient) buildRequest(method, path string, pathParams, queryPara
 
 	q := url.Query()
 	for k, v := range queryParams {
-		q.Set(k, v.(string))
+		q.Set(k, fmt.Sprintf("%v", v))
 	}
+	url.RawQuery = q.Encode()
 
 	if len(bodies) > 0 {
 		req, err = gc.buildBodyRequest(method, url.String(), bodies[0])
