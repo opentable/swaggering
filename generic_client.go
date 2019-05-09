@@ -10,9 +10,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/opentable/sous/util/logging"
-	"github.com/opentable/sous/util/logging/messages"
 )
 
 type (
@@ -29,9 +26,12 @@ type (
 	// GenericClient is a generic client for Swagger described services
 	GenericClient struct {
 		BaseURL string
-		Logger  logging.LogSink
+		Logger  LogSink
 		HTTP    http.Client
 	}
+
+	// LogSink is a function to integrate the GenericClient with whatever logging platform.
+	LogSink func(map[string]interface{})
 
 	// ReqError represents failures from requests
 	ReqError struct {
@@ -41,6 +41,7 @@ type (
 		Body         bytes.Buffer
 	}
 
+	// UrlParams are key-value pairs to URL encoded into the request
 	UrlParams map[string]interface{}
 )
 
@@ -70,7 +71,7 @@ func (gc *GenericClient) Request(resourceName, method, path string, pathParams, 
 		return
 	}
 
-	messages.ReportClientHTTPResponse(gc.Logger, "GenericClient", res, resourceName, time.Now().Sub(start))
+	gc.Logger(buildLogMapFromResponse(res, resourceName, start))
 
 	if res.StatusCode > 299 {
 		rerr := &ReqError{
@@ -86,6 +87,42 @@ func (gc *GenericClient) Request(resourceName, method, path string, pathParams, 
 		return
 	}
 	return res.Body, nil
+}
+
+func buildLogMapFromResponse(rz *http.Response, resourceName string, start time.Time) map[string]interface{} {
+	dur := time.Now().Sub(start)
+	rq := rz.Request
+	url := rq.URL
+
+	qps := map[string]string{}
+	for k, v := range url.Query() {
+		qps[k] = strings.Join(v, ",")
+	}
+
+	method := rq.Method
+	urlstring := url.String()
+	rqSize := rq.ContentLength
+
+	lvl := "INFO"
+	if rz.StatusCode < 300 {
+		lvl = "DEBUG"
+	}
+
+	return map[string]interface{}{
+		"level": lvl,
+
+		"isResponse":     true,
+		"resourceFamily": resourceName,
+		"method":         method,
+		"url":            urlstring,
+		"server":         url.Host,
+		"path":           url.Path,
+		"parms":          url.RawQuery,
+		"status":         rz.StatusCode,
+		"requestSize":    rqSize,
+		"responseSize":   rz.ContentLength,
+		"dur":            dur,
+	}
 }
 
 func (gc *GenericClient) buildRequest(method, path string, pathParams, queryParams UrlParams, bodies ...DTO) (req *http.Request, err error) {

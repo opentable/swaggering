@@ -17,7 +17,7 @@ func TestFeedDTO(t *testing.T) {
 	ctrl.FeedDTO(m, nil)
 
 	other := &TestModel{}
-	prms := urlParams{}
+	prms := UrlParams{}
 	err := clnt.DTORequest("test-somewhere", other, "GET", "/somewhere", prms, prms)
 	assert.Equal(m.TestGo, other.TestGo)
 	ov, err := other.GetField("TestGo")
@@ -32,7 +32,7 @@ func TestFeedSimple(t *testing.T) {
 
 	ctrl.FeedSimple("hi", nil)
 
-	prms := urlParams{}
+	prms := UrlParams{}
 	body, err := clnt.Request("test-whatever", "GET", "/whatever", prms, prms)
 	assert.NoError(err)
 	got, err := ioutil.ReadAll(body)

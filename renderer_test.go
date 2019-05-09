@@ -11,7 +11,7 @@ import (
 
 import "testing"
 
-func ExampleSnakeCase() {
+func ExamplesnakeCase() {
 	fmt.Println(snakeCase("HTTPtest"))
 	fmt.Println(snakeCase("SomethingJSON"))
 	// Output:
