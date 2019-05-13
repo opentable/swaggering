@@ -8,13 +8,11 @@ import (
 )
 
 type SingularityDeploy struct {
-	present map[string]bool
+	Id *string `json:"id,omitempty"`
 
-	Id string `json:"id,omitempty"`
+	Env *map[string]string `json:"env,omitempty"`
 
-	Env map[string]string `json:"env"`
-
-	RequestId string `json:"requestId,omitempty"`
+	RequestId *string `json:"requestId,omitempty"`
 }
 
 func (self *SingularityDeploy) Populate(jsonReader io.ReadCloser) (err error) {
@@ -29,10 +27,6 @@ func (self *SingularityDeploy) Absorb(other swaggering.DTO) error {
 	return fmt.Errorf("A SingularityDeploy cannot copy the values from %#v", other)
 }
 
-func (self *SingularityDeploy) MarshalJSON() ([]byte, error) {
-	return swaggering.MarshalJSON(self)
-}
-
 func (self *SingularityDeploy) FormatText() string {
 	return swaggering.FormatText(self)
 }
@@ -41,14 +35,7 @@ func (self *SingularityDeploy) FormatJSON() string {
 	return swaggering.FormatJSON(self)
 }
 
-func (self *SingularityDeploy) FieldsPresent() []string {
-	return swaggering.PresenceFromMap(self.present)
-}
-
 func (self *SingularityDeploy) SetField(name string, value interface{}) error {
-	if self.present == nil {
-		self.present = make(map[string]bool)
-	}
 	switch name {
 	default:
 		return fmt.Errorf("No such field %s on SingularityDeploy", name)
@@ -56,32 +43,26 @@ func (self *SingularityDeploy) SetField(name string, value interface{}) error {
 	case "id", "Id":
 		v, ok := value.(string)
 		if ok {
-			self.Id = v
-			self.present["id"] = true
+			self.Id = &v
 			return nil
-		} else {
-			return fmt.Errorf("Field id/Id: value %v(%T) couldn't be cast to type string", value, value)
 		}
+		return fmt.Errorf("Field id/Id: value %v(%T) couldn't be cast to type string", value, value)
 
 	case "env", "Env":
 		v, ok := value.(map[string]string)
 		if ok {
-			self.Env = v
-			self.present["env"] = true
+			self.Env = &v
 			return nil
-		} else {
-			return fmt.Errorf("Field env/Env: value %v(%T) couldn't be cast to type map[string]string", value, value)
 		}
+		return fmt.Errorf("Field env/Env: value %v(%T) couldn't be cast to type map[string]string", value, value)
 
 	case "requestId", "RequestId":
 		v, ok := value.(string)
 		if ok {
-			self.RequestId = v
-			self.present["requestId"] = true
+			self.RequestId = &v
 			return nil
-		} else {
-			return fmt.Errorf("Field requestId/RequestId: value %v(%T) couldn't be cast to type string", value, value)
 		}
+		return fmt.Errorf("Field requestId/RequestId: value %v(%T) couldn't be cast to type string", value, value)
 
 	}
 }
@@ -92,48 +73,33 @@ func (self *SingularityDeploy) GetField(name string) (interface{}, error) {
 		return nil, fmt.Errorf("No such field %s on SingularityDeploy", name)
 
 	case "id", "Id":
-		if self.present != nil {
-			if _, ok := self.present["id"]; ok {
-				return self.Id, nil
-			}
-		}
+		return *self.Id, nil
 		return nil, fmt.Errorf("Field Id no set on Id %+v", self)
 
 	case "env", "Env":
-		if self.present != nil {
-			if _, ok := self.present["env"]; ok {
-				return self.Env, nil
-			}
-		}
+		return *self.Env, nil
 		return nil, fmt.Errorf("Field Env no set on Env %+v", self)
 
 	case "requestId", "RequestId":
-		if self.present != nil {
-			if _, ok := self.present["requestId"]; ok {
-				return self.RequestId, nil
-			}
-		}
+		return *self.RequestId, nil
 		return nil, fmt.Errorf("Field RequestId no set on RequestId %+v", self)
 
 	}
 }
 
 func (self *SingularityDeploy) ClearField(name string) error {
-	if self.present == nil {
-		self.present = make(map[string]bool)
-	}
 	switch name {
 	default:
 		return fmt.Errorf("No such field %s on SingularityDeploy", name)
 
 	case "id", "Id":
-		self.present["id"] = false
+		self.Id = nil
 
 	case "env", "Env":
-		self.present["env"] = false
+		self.Env = nil
 
 	case "requestId", "RequestId":
-		self.present["requestId"] = false
+		self.RequestId = nil
 
 	}
 

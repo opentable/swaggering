@@ -18,14 +18,9 @@ const (
 {{end}}
 
 type {{.Name}} struct {
-  present map[string]bool
 {{range $name, $prop := .Fields}}
   {{if not $prop.Valid}}// Invalid field: {{end -}}
-    {{$prop.Name}} {{$prop.TypeString "dtos"}} `json:"{{$prop.SwaggerName}}
-  {{- if $prop.Omittable -}}
-  ,omitempty
-  {{- end -}}
-  "`
+    {{$prop.Name}} *{{$prop.TypeString "dtos"}} `json:"{{$prop.SwaggerName}},omitempty"`
 {{end}}
 }
 
@@ -41,10 +36,6 @@ func (self *{{.Name}}) Absorb(other swaggering.DTO) error {
   return fmt.Errorf("A {{.Name}} cannot copy the values from %#v", other)
 }
 
-func (self *{{.Name}}) MarshalJSON() ([]byte, error) {
-  return swaggering.MarshalJSON(self)
-}
-
 func (self *{{.Name}}) FormatText() string {
 	return swaggering.FormatText(self)
 }
@@ -53,14 +44,7 @@ func (self *{{.Name}}) FormatJSON() string {
 	return swaggering.FormatJSON(self)
 }
 
-func (self *{{.Name}}) FieldsPresent() []string {
-  return swaggering.PresenceFromMap(self.present)
-}
-
 func (self *{{.Name}}) SetField(name string, value interface{}) error {
-  if self.present == nil {
-    self.present = make(map[string]bool)
-  }
   switch name {
   default:
     return fmt.Errorf("No such field %s on {{.Name}}", name)
@@ -71,12 +55,10 @@ func (self *{{.Name}}) SetField(name string, value interface{}) error {
       {{- $prop.TypeString "dtos" -}}
       )
       if ok {
-        self.{{$prop.Name}} = v
-        self.present["{{$prop.SwaggerName}}"] = true
+        self.{{$prop.Name}} = &v
         return nil
-      } else {
-        return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.Name}}: value %v(%T) couldn't be cast to type {{$prop.TypeString "dtos"}}", value, value)
       }
+      return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.Name}}: value %v(%T) couldn't be cast to type {{$prop.TypeString "dtos"}}", value, value)
     {{end}}
   {{end}}
   }
@@ -89,11 +71,7 @@ func (self *{{.Name}}) GetField(name string) (interface{}, error) {
   {{range $name, $prop := .Fields}}
     {{ if $prop.Valid }}
     case "{{$prop.SwaggerName}}", "{{$prop.Name}}":
-    if self.present != nil {
-      if _, ok := self.present["{{$prop.SwaggerName}}"]; ok {
-        return self.{{$prop.Name}}, nil
-      }
-    }
+      return *self.{{$prop.Name}}, nil
     return nil, fmt.Errorf("Field {{$prop.Name}} no set on {{.Name}} %+v", self)
     {{end}}
   {{end}}
@@ -101,16 +79,13 @@ func (self *{{.Name}}) GetField(name string) (interface{}, error) {
 }
 
 func (self *{{.Name}}) ClearField(name string) error {
-  if self.present == nil {
-    self.present = make(map[string]bool)
-  }
   switch name {
   default:
     return fmt.Errorf("No such field %s on {{.Name}}", name)
   {{range $name, $prop := .Fields}}
     {{ if $prop.Valid }}
   case "{{$prop.SwaggerName}}", "{{$prop.Name}}":
-    self.present["{{$prop.SwaggerName}}"] = false
+    self.{{$prop.Name}} = nil
     {{end}}
   {{end}}
   }

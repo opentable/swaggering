@@ -65,20 +65,12 @@ func (self *TestModel) Absorb(other DTO) error {
 	return fmt.Errorf("A TestModel cannot absorb the values from %v", other)
 }
 
-func (self *TestModel) MarshalJSON() ([]byte, error) {
-	return MarshalJSON(self)
-}
-
 func (self *TestModel) FormatText() string {
 	return FormatText(self)
 }
 
 func (self *TestModel) FormatJSON() string {
 	return FormatJSON(self)
-}
-
-func (self *TestModel) FieldsPresent() []string {
-	return PresenceFromMap(self.present)
 }
 
 func (self *TestModel) SetField(name string, value interface{}) error {

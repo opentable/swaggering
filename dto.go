@@ -25,7 +25,6 @@ type (
 	// semantically different from { name: "Judson", job: undefined }.
 	// It's important to distinguish absence from zero, therefore.
 	Fielder interface {
-		FieldsPresent() []string
 		GetField(string) (interface{}, error)
 		SetField(string, interface{}) error
 		ClearField(string) error
@@ -39,18 +38,9 @@ func ReadPopulate(jsonReader io.ReadCloser, target interface{}) error {
 	return dec.Decode(target)
 }
 
-// MarshalJSON marshals a Fielder to JSON, omitting fields that aren't present
-func MarshalJSON(dto Fielder) (buf []byte, err error) {
-	data := make(map[string]interface{})
-	for _, name := range dto.FieldsPresent() {
-		data[name], _ = dto.GetField(name)
-	}
-	return json.Marshal(data)
-}
-
 // LoadMap loads a map of values into a Fielder
 func LoadMap(dto Fielder, from map[string]interface{}) (Fielder, error) {
-	return dto, dto.LoadMap(from)
+  return dto, LoadMapIntoDTO(from, dto)
 }
 
 // FormatText formats a DTO
@@ -67,18 +57,6 @@ func FormatJSON(dto interface{}) string {
 	buf := bytes.Buffer{}
 	json.Indent(&buf, str, "", "  ")
 	return buf.String()
-}
-
-// PresenceFromMap takes a map from names to bools and returns the names that
-// are "present"
-func PresenceFromMap(m map[string]bool) []string {
-	var presence []string
-	for name, present := range m {
-		if present {
-			presence = append(presence, name)
-		}
-	}
-	return presence
 }
 
 // LoadMapIntoDTO loads a map of key/values into a DTO, setting their presence

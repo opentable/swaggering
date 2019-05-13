@@ -137,27 +137,11 @@ func (t *Struct) TypeString(pkg string) string {
 	return fmt.Sprintf("%s.%s", t.Package, t.Name)
 }
 
-/*
-	if err == nil {
-		if c.GoModel {
-			c.GoTypePrefix = ""
-			c.GoPackage = "dtos"
-			c.GoBaseType = c.GoBaseType + "List"
-		} else if c.GoBaseType == "string" {
-			c.GoBaseType = "StringList"
-			c.GoPackage = "swaggering"
-			c.GoTypePrefix = ""
-			c.GoModel = false
-		} else {
-			c.GoTypePrefix = "[]" + c.GoTypePrefix
-		}
-	}
-*/
 // TypeString implements TypeStringer on SliceType.
 func (t *SliceType) TypeString(pkg string) string {
 	if st, is := t.items.(*PrimitiveType); is {
 		if st.Name == "string" {
-			return "swaggering.StringList" // g-d only knows why
+			return "swaggering.StringList"
 		}
 		return fmt.Sprintf("[]%s", t.items.TypeString(pkg))
 	}
