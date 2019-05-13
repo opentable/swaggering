@@ -31,63 +31,12 @@ type (
 		ClearField(string) error
 		LoadMap(map[string]interface{}) error
 	}
-
-	// StringList - it's a list, now with 100% more string
-	// wiseacre! I wish you'd documented why this was important
-	StringList []string
 )
 
-// Populate loads a StringList from json
-func (list *StringList) Populate(jsonReader io.ReadCloser) (err error) {
-	return ReadPopulate(jsonReader, list)
-}
-
-// FormatText formats a StringList as text
-func (list *StringList) FormatText() string {
-	return strings.Join(*list, "\n")
-}
-
-// FormatJSON formats a StringList to JSON
-func (list *StringList) FormatJSON() string {
-	return FormatJSON(list)
-}
-
-// Absorb implements DTO for StringList
-func (list *StringList) Absorb(other DTO) error {
-	if like, ok := other.(*StringList); ok {
-		*list = *like
-		return nil
-	}
-
-	return fmt.Errorf("A StringList cannot absorb from a %T (%v)", other, other)
-
-}
-
 // ReadPopulate reads from jsonReader in order to fill in target
-func ReadPopulate(jsonReader io.ReadCloser, target interface{}) (err error) {
-	data := make([]byte, 0, 1024)
-	chunk := make([]byte, 1024)
-	for {
-		var count int
-		count, err = jsonReader.Read(chunk)
-		data = append(data, chunk[:count]...)
-
-		if err == io.EOF {
-			jsonReader.Close()
-			break
-		}
-		if err != nil {
-			return
-		}
-	}
-
-	if len(data) == 0 {
-		err = nil
-		return
-	}
-
-	err = json.Unmarshal(data, target)
-	return
+func ReadPopulate(jsonReader io.ReadCloser, target interface{}) error {
+	dec := json.NewDecoder(jsonReader)
+	return dec.Decode(target)
 }
 
 // MarshalJSON marshals a Fielder to JSON, omitting fields that aren't present

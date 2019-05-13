@@ -1,0 +1,14 @@
+package test
+
+import "github.com/test/test/dtos"
+
+func (client *Client) UpdatePendingDeploy() (response *dtos.SingularityDeploy, err error) {
+	pathParamMap := map[string]interface{}{}
+
+	queryParamMap := map[string]interface{}{}
+
+	response = new(dtos.SingularityDeploy)
+	err = client.DTORequest("test-updatependingdeploy", response, "POST", "/api/deploys/update", pathParamMap, queryParamMap)
+
+	return
+}

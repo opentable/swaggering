@@ -2,15 +2,22 @@ package swaggering
 
 import (
 	"bytes"
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+var update = flag.Bool("update", false, "update .golden files")
+
 func TestMapStringString(t *testing.T) {
-	assert := assert.New(t)
-	require := require.New(t)
 	ctx := NewContext("test", "github.com/test/test")
 
 	serviceContents := `
@@ -62,10 +69,42 @@ func TestMapStringString(t *testing.T) {
 
 	ctx.Resolve()
 
-	require.Contains(ctx.structs, "SingularityDeploy")
+	require.Contains(t, ctx.structs, "SingularityDeploy")
 	dep := ctx.structs["SingularityDeploy"]
 	envField := dep.findField("Env")
-	require.NotNil(envField)
+	require.NotNil(t, envField)
 
-	assert.Equal("map[string]string", envField.TypeString(""))
+	assert.Equal(t, "map[string]string", envField.TypeString(""))
+
+	targetDir := filepath.Join(os.TempDir(), "swaggering_test")
+	os.RemoveAll(targetDir)
+	os.MkdirAll(targetDir, os.ModePerm)
+	os.MkdirAll("testdata", os.ModePerm)
+	log.Printf("Integration test dir: %s", targetDir)
+
+	RenderService(targetDir, ctx)
+
+	fileRendersCorrectly := func(name string) {
+		path := filepath.Join(targetDir, name)
+		_, err := os.Stat(path)
+		require.NoError(t, err)
+		actual, err := ioutil.ReadFile(path)
+		require.NoError(t, err)
+		subName := strings.ReplaceAll(name, string(os.PathSeparator), "_")
+		golden := filepath.Join("testdata", fmt.Sprintf("%s-%s.golden", t.Name(), subName))
+
+		if *update {
+			ioutil.WriteFile(golden, actual, 0644)
+		}
+		expected, err := ioutil.ReadFile(golden)
+		require.NoError(t, err)
+
+		actualLines := bytes.Split(actual, []byte{'\n'})
+		expectedLines := bytes.Split(expected, []byte{'\n'})
+
+		assert.ElementsMatch(t, actualLines, expectedLines)
+	}
+
+	fileRendersCorrectly("deploys.go")
+	fileRendersCorrectly("dtos/singularity_deploy.go")
 }
