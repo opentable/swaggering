@@ -112,7 +112,6 @@ func TestRenderCodefile(t *testing.T) {
 	}
 
 	bytes, err := r.renderCodeFile("testing", a)
-	writeErrfile("/tmp/swaggering-test/brknApi.go", bytes)
 	if !assert.NoError(err) {
 		writeErrfile("/tmp/swaggering-test/brknApi.go", bytes)
 	}
