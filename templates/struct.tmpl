@@ -20,7 +20,7 @@ const (
 type {{.Name}} struct {
 {{range $name, $prop := .Fields}}
   {{if not $prop.Valid}}// Invalid field: {{end -}}
-    {{$prop.Name}} *{{$prop.TypeString "dtos"}} `json:"{{$prop.SwaggerName}},omitempty"`
+  {{$prop.Name}} {{if $prop.IsConcrete}}*{{end}}{{$prop.TypeString "dtos"}} `json:"{{$prop.SwaggerName}},omitempty"`
 {{end}}
 }
 

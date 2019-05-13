@@ -105,7 +105,7 @@ func (context *Context) modelFor(typeName string) (TypeStringer, error) {
 	t, err := context.modelUsed(typeName)
 	if err != nil {
 		return &Pointer{
-			&Struct{
+      TypeStringer: &Struct{
 				invalidity: true,
 				Name:       typeName,
 				Package:    "notfound",
@@ -113,7 +113,7 @@ func (context *Context) modelFor(typeName string) (TypeStringer, error) {
 		}, err
 	}
 
-	return &Pointer{t}, nil
+  return &Pointer{TypeStringer: t}, nil
 }
 
 func (context *Context) modelUsed(name string) (TypeStringer, error) {

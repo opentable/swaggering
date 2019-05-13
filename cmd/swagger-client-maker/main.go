@@ -32,7 +32,7 @@ func main() {
 	if !ok || importName == nil {
 		importName, err = swaggering.InferPackage(renderTarget)
 		if err != nil {
-			err = fmt.Errorf("%v - try using --client-package", err)
+			err = fmt.Errorf("%v - try using --import-name", err)
 			log.Fatal(err)
 		}
 	}

@@ -18,20 +18,26 @@ type (
 	TypeStringer interface {
 		TypeString(pkg string) string
 		Valid() bool
+    IsConcrete() bool
 	}
 
 	invalidity  bool
 	alwaysValid struct{}
 
+  isConcrete struct{}
+  isReference struct{}
+
 	// PrimitiveType is a primitive type.
 	PrimitiveType struct {
 		alwaysValid
+    isConcrete
 		Name string
 	}
 
 	// EnumType is an enum type.
 	EnumType struct {
 		alwaysValid
+    isConcrete
 		Name      string
 		Values    []string
 		HostModel string
@@ -40,18 +46,21 @@ type (
 	// MapType is an map[] type.
 	MapType struct {
 		alwaysValid
+    isReference
 		keys, values TypeStringer
 	}
 
 	// SliceType is a []slice type.
 	SliceType struct {
 		alwaysValid
+    isReference
 		items TypeStringer
 	}
 
 	// Struct describes a Go struct that will be build from a swagger API.
 	Struct struct {
 		invalidity
+    isConcrete
 		Package, Name string
 		Fields        []*Attribute
 		Enums         []*EnumType
@@ -60,14 +69,6 @@ type (
 	Pointer struct {
 		TypeStringer
 	}
-	/*
-		// GoType represents a datatype to be rendered as Go code.
-		GoType struct {
-			Prefix, Package, BaseType string
-			Invalid, Model            bool
-			EnumDesc                  Enum
-		}
-	*/
 
 	// Method describes the Go method that will be build from a swagger API.
 	Method struct {
@@ -101,12 +102,20 @@ type (
 	}
 )
 
-func (v alwaysValid) Valid() bool {
+func (alwaysValid) Valid() bool {
 	return true
 }
 
 func (v invalidity) Valid() bool {
 	return !bool(v)
+}
+
+func (isConcrete) IsConcrete() bool {
+  return true
+}
+
+func (isReference) IsConcrete() bool {
+  return false
 }
 
 // TypeString implements TypeStringer on PrimitiveType.
@@ -127,6 +136,11 @@ func (t *MapType) TypeString(pkg string) string {
 // TypeString implements TypeStringer on Pointer.
 func (t *Pointer) TypeString(pkg string) string {
 	return fmt.Sprintf("*%s", t.TypeStringer.TypeString(pkg))
+}
+
+// IsConcrete implements TypeStringer on Pointer.
+func (t *Pointer) IsConcrete() bool {
+  return false
 }
 
 // TypeString implements TypeStringer on Struct.
