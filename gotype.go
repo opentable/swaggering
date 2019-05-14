@@ -46,14 +46,14 @@ type (
 	// MapType is an map[] type.
 	MapType struct {
 		alwaysValid
-    isReference
+    isConcrete
 		keys, values TypeStringer
 	}
 
 	// SliceType is a []slice type.
 	SliceType struct {
 		alwaysValid
-    isReference
+    isConcrete
 		items TypeStringer
 	}
 

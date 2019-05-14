@@ -19,7 +19,7 @@ const (
 
 type {{.Name}} struct {
 {{range $name, $prop := .Fields}}
-  {{if not $prop.Valid}}// Invalid field: {{end -}}
+  {{- if not $prop.Valid}}// Invalid field: {{end -}}
   {{$prop.Name}} {{if $prop.IsConcrete}}*{{end}}{{$prop.TypeString "dtos"}} `json:"{{$prop.SwaggerName}},omitempty"`
 {{end}}
 }
@@ -55,7 +55,7 @@ func (self *{{.Name}}) SetField(name string, value interface{}) error {
       {{- $prop.TypeString "dtos" -}}
       )
       if ok {
-        self.{{$prop.Name}} = &v
+        self.{{$prop.Name}} = {{if $prop.IsConcrete}}&{{end}}v
         return nil
       }
       return fmt.Errorf("Field {{$prop.SwaggerName}}/{{$prop.Name}}: value %v(%T) couldn't be cast to type {{$prop.TypeString "dtos"}}", value, value)
@@ -71,7 +71,7 @@ func (self *{{.Name}}) GetField(name string) (interface{}, error) {
   {{range $name, $prop := .Fields}}
     {{ if $prop.Valid }}
     case "{{$prop.SwaggerName}}", "{{$prop.Name}}":
-      return *self.{{$prop.Name}}, nil
+    return {{if $prop.IsConcrete}}*{{end}}self.{{$prop.Name}}, nil
     return nil, fmt.Errorf("Field {{$prop.Name}} no set on {{.Name}} %+v", self)
     {{end}}
   {{end}}

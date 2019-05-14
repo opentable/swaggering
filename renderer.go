@@ -49,6 +49,9 @@ func RenderService(target string, ingester *Context) {
 	self := NewRenderer(target)
 	for _, strct := range ingester.structs {
 		log.Print("DTO Struct: ", strct.Name)
+    for _, f := range strct.Fields {
+      log.Printf("  %#v c:%t", f.Field, f.Field.IsConcrete())
+    }
 		path := filepath.Join("dtos", snakeCase(strct.Name))
 		err := self.writeStruct(path, strct)
 		if err != nil {
